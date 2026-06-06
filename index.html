@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cisco SD-WAN ルータ Factory Reset 手順書</title>
+  <title>Cisco SD-WAN Router Factory Reset Guide</title>
   <style>
     :root {
       color-scheme: light;
@@ -64,6 +64,24 @@
     .meta {
       color: var(--muted);
       margin-bottom: 28px;
+    }
+
+    .language-switch {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      margin: 0 0 18px;
+      font-size: 0.92rem;
+    }
+
+    .language-switch a {
+      color: #1d4ed8;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .language-switch a:hover {
+      text-decoration: underline;
     }
 
     .note,
@@ -337,113 +355,114 @@
 </head>
 <body>
   <main>
-    <h1>Cisco SD-WAN ルータ Factory Reset 手順書</h1>
-    <p class="meta">対象: Cisco SD-WAN ルータ / Bootstrap ファイル再作成 / Factory Reset</p>
+    <h1>Cisco SD-WAN Router Factory Reset Guide</h1>
+    <p class="meta">Scope: Cisco SD-WAN routers / Bootstrap file recreation / Factory Reset</p>
+    <p class="language-switch">Japanese backup: <a href="ja.html">Japanese version</a></p>
 
     <nav class="page-nav">
-      <button type="button" class="page-btn active" data-target="page-basic">基本手順（factory reset all）</button>
-      <button type="button" class="page-btn" data-target="page-os-restore">Secure Reset（factory reset all secure）</button>
-      <button type="button" class="page-btn" data-target="page-advanced">Bootstrap ファイルが正しく読み込まれずに立ち上がってしまった場合</button>
-      <button type="button" class="page-btn" data-target="page-reset-summary">リセットコマンドオプションサマリー</button>
+      <button type="button" class="page-btn active" data-target="page-basic">Basic Procedure (factory reset all)</button>
+      <button type="button" class="page-btn" data-target="page-os-restore">Secure Reset (factory reset all secure)</button>
+      <button type="button" class="page-btn" data-target="page-advanced">If the Bootstrap file is not loaded correctly</button>
+      <button type="button" class="page-btn" data-target="page-reset-summary">Reset Command Options Summary</button>
     </nav>
 
     <div id="page-basic" class="page active">
     <section>
-      <h2>1. 目的</h2>
+      <h2>1. Purpose</h2>
       <p>
-        Cisco SD-WAN ルータを Factory Reset し、リセット後に Bootstrap ファイル
-        <code>bootflash:ciscosdwan.cfg</code> から再度ルータを立ち上げ直す。
-        本手順は、ルータが SD-WAN の Controller Mode で動作している状態から開始し、
-        CLI で Factory Reset コマンドを直接実行する流れを対象とする。
+        Factory reset a Cisco SD-WAN router, then bring the router back up by using the Bootstrap file
+        <code>bootflash:ciscosdwan.cfg</code>.
+        This procedure starts while the router is operating in SD-WAN Controller Mode and covers
+        executing the Factory Reset command directly from the CLI.
       </p>
       <div class="warning">
-        <span class="label">重要:</span>
-        Factory Reset は不可逆操作であり、設定、ユーザ情報、ライセンス、OBFLログ、ROMMON変数、
-        ユーザデータ、起動設定などが削除される。実行前に必ず Bootstrap 内容と必要な設定情報を退避すること。
+        <span class="label">Important:</span>
+        Factory Reset is irreversible. Configuration, user information, licenses, OBFL logs, ROMMON variables,
+        user data, startup configuration, and related data may be deleted. Always back up the Bootstrap content and required configuration details before proceeding.
       </div>
     </section>
 
     <section>
-      <h2>2. 前提条件</h2>
+      <h2>2. Prerequisites</h2>
       <table>
         <tbody>
           <tr>
-            <th>対象機器</th>
-            <td><span class="placeholder">&lt;対象ルータ名 / 機種名&gt;</span></td>
+            <th>Target Device</th>
+            <td><span class="placeholder">&lt;Router name / model&gt;</span></td>
           </tr>
           <tr>
-            <th>作業者</th>
-            <td><span class="placeholder">&lt;作業者名&gt;</span></td>
+            <th>Operator</th>
+            <td><span class="placeholder">&lt;Operator name&gt;</span></td>
           </tr>
           <tr>
-            <th>作業日時</th>
+            <th>Maintenance Window</th>
             <td><span class="placeholder">&lt;YYYY-MM-DD HH:MM&gt;</span></td>
           </tr>
           <tr>
-            <th>コンソール接続</th>
-            <td>Factory Reset 後に操作できるよう、コンソール接続を確保しておく。</td>
+            <th>Console Access</th>
+            <td>Ensure console access is available so the router can be operated after Factory Reset.</td>
           </tr>
           <tr>
-            <th>開始時の動作モード</th>
-            <td>SD-WAN の Controller Mode で動作している状態から作業を開始する。</td>
+            <th>Starting Mode</th>
+            <td>Start this procedure while the router is operating in SD-WAN Controller Mode.</td>
           </tr>
           <tr>
-            <th>電源</th>
-            <td>Factory Reset 中は電源断や再起動操作を行わない。</td>
+            <th>Power</th>
+            <td>Do not power off or manually reboot the device during Factory Reset.</td>
           </tr>
         </tbody>
       </table>
 
       <div class="note">
-        <span class="label">作業開始前の確認:</span>
-        現在動作中のコンピューターが想定通りのものであり、現在動作中のルータの Config が想定通りであることを確認してください。
+        <span class="label">Pre-check:</span>
+        Confirm that the computer currently in use is the intended one and that the running router configuration is as expected.
       </div>
     </section>
 
     <section>
-      <h2>3. Bootstrap 設定の作成</h2>
-      <p>ルータ上で以下のコマンドを実行し、Bootstrap 設定を作成する。</p>
+      <h2>3. Create the Bootstrap Configuration</h2>
+      <p>Run the following command on the router to create the Bootstrap configuration.</p>
       <pre><code>request platform software sdwan bootstrap-config save</code></pre>
 
-      <h3>確認ポイント</h3>
+      <h3>Checkpoints</h3>
       <ul>
-        <li>コマンドがエラーなく完了すること。</li>
-        <li><code>bootflash:ciscosdwan.cfg</code> が作成されていること。</li>
+        <li>The command completes without errors.</li>
+        <li><code>bootflash:ciscosdwan.cfg</code> has been created.</li>
       </ul>
     </section>
 
     <section>
-      <h2>4. Bootstrap 内容の取得</h2>
+      <h2>4. Retrieve the Bootstrap Content</h2>
       <p>
-        作成された Bootstrap ファイルの内容を表示し、出力内容をコピーする。
-        表示コマンドは環境に合わせて確認すること。
+        Display the generated Bootstrap file and copy the output.
+        Confirm the display command that is appropriate for your environment.
       </p>
       <pre><code>dir bootflash: | include ciscosdwan.cfg
 more bootflash:ciscosdwan.cfg</code></pre>
 
       <div class="note">
-        <span class="label">注意:</span>
-        Bootstrap 内には UUID、system-ip、site-id、vBond 情報、ホスト名、ユーザ設定などの機器固有情報が含まれる。
-        認証情報や secret hash は手順書に実値を固定せず、権限のある保管場所で管理すること。
+        <span class="label">Note:</span>
+        The Bootstrap file contains device-specific information such as UUID, system-ip, site-id, vBond details, hostname, and user configuration.
+        Do not hardcode credentials or secret hashes in the guide. Store them only in an authorized secure location.
       </div>
     </section>
 
     <section>
-      <h2>5. TCLSH 用 Bootstrap 再作成コマンドの準備</h2>
+      <h2>5. Prepare the TCLSH Command to Recreate the Bootstrap File</h2>
       <p>
-        Factory Reset 後に全ファイルが削除された場合を想定し、コピーした Bootstrap 内容を以下の
-        <code>tclsh</code> コマンド形式に貼り付ける。
-        この手順では、ルータへコマンドを送信するのではなく、手元の作業手順書または
-        流し込み用コンフィグを編集し、Factory Reset 後に使用する投入用コマンドを作成する。
-        作成したコマンドは、後続手順でコンソール接続からルータへ流し込み、
-        <code>bootflash:ciscosdwan.cfg</code> を再作成するために使用する。
+        Assuming all files may be deleted after Factory Reset, paste the copied Bootstrap content into the following
+        <code>tclsh</code> command format.
+        At this stage, you are not sending commands to the router. Instead, edit the local procedure document or
+        paste-in configuration file and prepare the command set to be used after Factory Reset.
+        The prepared command will be pasted into the router later through the console connection to recreate
+        <code>bootflash:ciscosdwan.cfg</code>.
       </p>
 
       <pre><code>tclsh
-puts [open "bootflash:ciscosdwan.cfg" w+] {<span class="placeholder">&lt;ここに Bootstrap ファイルの内容を貼り付ける&gt;</span>
+puts [open "bootflash:ciscosdwan.cfg" w+] {<span class="placeholder">&lt;Paste the Bootstrap file content here&gt;</span>
 }</code></pre>
 
-      <h3>貼り付けフォーマット例</h3>
+      <h3>Paste Format Example</h3>
       <pre><code>tclsh
 puts [open "bootflash:ciscosdwan.cfg" w+] {Content-Type: multipart/mixed; boundary="===============&lt;BOUNDARY_ID&gt;=="
 MIME-Version: 1.0
@@ -474,23 +493,23 @@ system
 hostname <span class="placeholder">&lt;HOSTNAME&gt;</span>
 username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_HASH&gt;</span>
 !
-<span class="placeholder">&lt;以降、実機から取得した Bootstrap 設定を貼り付ける&gt;</span>
+<span class="placeholder">&lt;Paste the remaining Bootstrap configuration collected from the device&gt;</span>
 --===============&lt;BOUNDARY_ID&gt;==--
 }</code></pre>
 
     </section>
 
     <section id="basic-factory-reset">
-      <h2>6. Factory Reset の実行</h2>
+      <h2>6. Execute Factory Reset</h2>
       <p>
-        SD-WAN の Controller Mode で動作している状態から、以下のコマンドで Factory Reset を直接実行する。
+        While the router is operating in SD-WAN Controller Mode, execute Factory Reset directly with the following command.
       </p>
       <button type="button" class="jump-btn" data-target="page-os-restore">
-        Secure Reset（<code>factory reset all secure</code>）を実行する場合は、OS イメージ復旧手順へ進む
+        Secure Reset (<code>factory reset all secure</code>) requires OS image recovery. Go to the dedicated recovery procedure
       </button>
       <pre><code>factory reset all</code></pre>
 
-      <p>確認プロンプトが複数回表示されるため、内容を確認して Enter を押す。</p>
+      <p>Several confirmation prompts are displayed. Review the content and press Enter to continue.</p>
       <pre><code>The factory reset operation is irreversible for all operations. Are you sure? [confirm]
 
 The following will be deleted as a part of factory reset:
@@ -510,33 +529,33 @@ Factory reset will take a backup of the boot image if the system is currently bo
 If the current boot image is a remote image or stored on a usb/nim-ssd, please take a backup of the image before executing this command.
 Are you sure you want to continue? [confirm]</code></pre>
 
-      <h3>実行後ログ例</h3>
+      <h3>Example Log After Execution</h3>
       <pre><code>*May 20 03:15:59.159: SED security lock disabled
 *May 20 03:16:00.116: %SYS-5-RELOAD: Reload requested by Exec. Reload Reason: Factory Reset</code></pre>
 
       <div class="warning">
-        <span class="label">禁止事項:</span>
-        Factory Reset 完了まで 30分から3時間程度かかる場合がある。処理中は電源を抜かず、
-        強制再起動や操作割り込みを行わないこと。Factory Reset 作業と再起動が確実に完了するまでは、
-        コンソール入力も行わないこと。
+        <span class="label">Do not:</span>
+        Factory Reset can take approximately 30 minutes to 3 hours. Do not unplug power,
+        force reboot, or interrupt the operation. Do not enter console input until
+        the Factory Reset operation and reboot have fully completed.
       </div>
 
-      <h3>オプション: ROMMON モードで起動した場合</h3>
+      <h3>Optional: If the Router Boots into ROMMON Mode</h3>
       <div class="note">
-        <span class="label">補足:</span>
-        Factory Reset 後に ROMMON モードで立ち上がってきた場合は、以下のコマンドで
-        ルーターを起動し直す。オプション作業の要否は筐体型番に応じて判断する。
+        <span class="label">Note:</span>
+        If the router boots into ROMMON mode after Factory Reset, boot the router again with the following commands.
+        Whether this optional step is required depends on the chassis model.
       </div>
       <pre><code>rommon &gt; confreg 0x2102
 rommon &gt; boot</code></pre>
     </section>
 
     <section id="basic-after-reset">
-      <h2>7. Factory Reset 後の初期プロンプト対応</h2>
+      <h2>7. Respond to Initial Prompts After Factory Reset</h2>
       <p>
-        Factory Reset 実行後、完了まで数時間待機する。以下の
-        <code>System Configuration Dialog</code> が表示されたら、初期設定ダイアログには入らず
-        <code>no</code> を入力する。
+        After executing Factory Reset, wait several hours for completion. When the following
+        <code>System Configuration Dialog</code> appears, do not enter the initial configuration dialog.
+        Enter <code>no</code>.
       </p>
 
       <pre><code>         --- System Configuration Dialog ---
@@ -544,16 +563,16 @@ rommon &gt; boot</code></pre>
 Would you like to enter the initial configuration dialog? [yes/no]: no</code></pre>
 
       <p>
-        続けて <code>enable secret</code> の入力を求められるため、一時的なパスワードを入力する。
-        ここで入力するパスワードは、この後の作業を進めるための一時的なものとする。
+        You will then be prompted for an <code>enable secret</code>. Enter a temporary password.
+        This password is only used to continue the recovery steps that follow.
       </p>
 
-      <pre><code>Enter enable secret: <span class="placeholder">&lt;一時パスワードを入力&gt;</span>
-Confirm enable secret: <span class="placeholder">&lt;一時パスワードを再入力&gt;</span></code></pre>
+      <pre><code>Enter enable secret: <span class="placeholder">&lt;Enter a temporary password&gt;</span>
+Confirm enable secret: <span class="placeholder">&lt;Re-enter the temporary password&gt;</span></code></pre>
 
       <p>
-        パスワード入力後、動作モード移行時の選択肢が表示される。
-        ここでは設定を保存せず IOS コマンドプロンプトへ進むため、<code>0</code> を選択する。
+        After entering the password, mode transition options are displayed.
+        Select <code>0</code> to proceed to the IOS command prompt without saving the configuration.
       </p>
 
       <pre><code>[0] Go to the IOS command prompt without saving this config.
@@ -562,28 +581,28 @@ Confirm enable secret: <span class="placeholder">&lt;一時パスワードを再
 
 Enter your selection [2]: 0</code></pre>
 
-      <h3>Autonomous Mode の確認</h3>
+      <h3>Confirm Autonomous Mode</h3>
       <p>
-        IOS コマンドプロンプトへ移行したら、<code>show version</code> を実行し、
-        出力内に <code>Autonomous</code> の文字列が表示されていることを確認する。
-        これにより、Factory Reset 後の起動状態が Autonomous Mode であることを確認する。
+        After reaching the IOS command prompt, run <code>show version</code> and confirm that
+        <code>Autonomous</code> appears in the output.
+        This confirms that the router booted in Autonomous Mode after Factory Reset.
       </p>
 
       <pre><code>Router#show version
-<span class="placeholder">&lt;出力内に Autonomous が表示されていることを確認&gt;</span></code></pre>
+<span class="placeholder">&lt;Confirm that Autonomous appears in the output&gt;</span></code></pre>
 
       <div class="note">
-        <span class="label">補足:</span>
-        この段階では NVRAM へ設定を保存しない。Bootstrap ファイルを再作成してから、
-        後続手順で必要な起動・適用確認を行う。
+        <span class="label">Note:</span>
+        Do not save the configuration to NVRAM at this stage. Recreate the Bootstrap file first,
+        then perform the required boot and application checks in later steps.
       </div>
     </section>
 
     <section>
-      <h2>8. Bootstrap ファイルの再作成</h2>
+      <h2>8. Recreate the Bootstrap File</h2>
       <p>
-        IOS コマンドプロンプトへ移行したら、<code>tclsh</code> を起動し、
-        事前に準備した Bootstrap 内容を <code>bootflash:ciscosdwan.cfg</code> として再作成する。
+        After reaching the IOS command prompt, start <code>tclsh</code> and recreate the prepared Bootstrap content as
+        <code>bootflash:ciscosdwan.cfg</code>.
       </p>
 
       <pre><code>Router#tclsh
@@ -618,30 +637,29 @@ system mode insecure
 hostname <span class="placeholder">&lt;HOSTNAME&gt;</span>
 username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_HASH&gt;</span>
 !
-<span class="placeholder">&lt;事前に取得した Bootstrap 設定の残りを貼り付ける&gt;</span>
+<span class="placeholder">&lt;Paste the remaining Bootstrap configuration collected earlier&gt;</span>
 --===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>==--
 }
 Router(tcl)#exit
 Router#</code></pre>
 
       <div class="note">
-        <span class="label">補足:</span>
-        実機では複数行貼り付け中に <code>+&gt;</code> の継続プロンプトが表示される場合がある。
-        <code>+&gt;</code> はルータ側の表示であり、入力する文字ではない。
+        <span class="label">Note:</span>
+        During multi-line paste on the actual router, the continuation prompt <code>+&gt;</code> may be displayed.
+        <code>+&gt;</code> is router output and must not be typed.
       </div>
 
       <div class="warning">
-        <span class="label">注意:</span>
-        Bootstrap 内容は必ず <code>{</code> と <code>}</code> の中に貼り付ける。
-        secret hash などに含まれる <code>$</code> 文字が Tcl で変換されないようにするため、
-        ダブルクォートでは囲まないこと。
+        <span class="label">Note:</span>
+        Always paste the Bootstrap content inside <code>{</code> and <code>}</code>.
+        Do not wrap the content in double quotes, because Tcl may otherwise expand <code>$</code> characters used in secret hashes.
       </div>
 
-      <h3>再作成後の確認</h3>
+      <h3>Verification After Recreation</h3>
       <p>
-        <code>tclsh</code> を終了後、作成された Bootstrap ファイルの内容を確認する。
-        先頭に <code>Content-Type: multipart/mixed</code> が表示され、
-        <code>#cloud-config</code> と <code>#cloud-boothook</code> が含まれていることを確認する。
+        After exiting <code>tclsh</code>, verify the recreated Bootstrap file.
+        Confirm that the beginning shows <code>Content-Type: multipart/mixed</code> and that
+        <code>#cloud-config</code> and <code>#cloud-boothook</code> are included.
       </p>
 
       <pre><code>Router#more bootflash:ciscosdwan.cfg
@@ -669,21 +687,20 @@ system
  system-ip             <span class="placeholder">&lt;SYSTEM_IP&gt;</span>
  overlay-id            <span class="placeholder">&lt;OVERLAY_ID&gt;</span>
  site-id               <span class="placeholder">&lt;SITE_ID&gt;</span>
-<span class="placeholder">&lt;以降、Bootstrap 設定が続く&gt;</span></code></pre>
+<span class="placeholder">&lt;Bootstrap configuration continues&gt;</span></code></pre>
     </section>
 
     <section>
-      <h2>9. Controller Mode の有効化</h2>
+      <h2>9. Enable Controller Mode</h2>
       <p>
-        Bootstrap ファイルを再作成し、内容確認が完了したら、
-        以下のコマンドで Controller Mode を有効化する。
+        After recreating and verifying the Bootstrap file, enable Controller Mode with the following command.
       </p>
 
       <pre><code>Router#controller-mode enable</code></pre>
 
       <p>
-        Controller Mode の有効化により NVRAM ファイルシステムと設定ファイルが削除され、
-        機器が再起動される。表示される確認プロンプトの内容を確認し、Enter を押す。
+        Enabling Controller Mode erases the NVRAM filesystem and configuration files, then reloads the device.
+        Review the confirmation prompts and press Enter.
       </p>
 
       <pre><code>Enabling controller mode will erase the nvram filesystem, remove all configuration files, and reload the box!
@@ -694,134 +711,133 @@ Boot variable either does not exist or buffer is too small
 This may impact autoboot of the router. Proceed with caution
 Do you wish to proceed with reload anyway[confirm]</code></pre>
 
-      <h3>実行後ログ例</h3>
+      <h3>Example Log After Execution</h3>
       <pre><code>*May 20 04:24:20.549: %IOSXE_RP_CFG_NOT-3-BOOT_VAR_NOT_SET: Either the boot variable does not exist or the buffer is too small.Keep it blank.
 *May 20 04:24:21.177: %SYS-7-NV_BLOCK_INIT: Initialized the geometry of nvram
 *May 20 04:24:21.725: %BOOT-6-MODECHANGE: Mode change success</code></pre>
 
       <div class="warning">
-        <span class="label">注意:</span>
-        <code>controller-mode enable</code> 実行後は設定ファイル削除と再起動が行われる。
-        BOOT 変数に関する警告が表示される場合があるため、事前に起動イメージの状態を確認してから実行すること。
+        <span class="label">Note:</span>
+        After <code>controller-mode enable</code>, configuration files are deleted and the device reloads.
+        A BOOT variable warning may be displayed, so verify the boot image state before executing this command.
       </div>
 
       <button type="button" class="jump-btn" data-target="page-advanced" data-scroll-target="advanced-start">
-        Config が正しく読み込まれなかった場合は、Bootstrap 読み込み失敗時の手順へ進む
+        If the configuration is not loaded correctly, go to the Bootstrap load failure procedure
       </button>
     </section>
 
     <section>
-      <h2>10. 再起動後の SD-WAN 正常性確認</h2>
+      <h2>10. Verify SD-WAN Health After Reboot</h2>
       <p>
-        Controller Mode 有効化後の再起動が完了したら、Bootstrap から SD-WAN Config が正常に読み込まれ、
-        SD-WAN コントローラと接続できていることを確認する。
+        After the reboot following Controller Mode enablement completes, confirm that the SD-WAN configuration was loaded from the Bootstrap file
+        and that the router can connect to the SD-WAN controllers.
       </p>
 
-      <h3>コントロール接続の確認</h3>
+      <h3>Check Control Connections</h3>
       <p>
-        vBond、vSmart、vManage などの SD-WAN コントローラとの接続状態を確認する。
-        想定するコントローラへの接続が確立していること、接続状態が正常であることを確認する。
+        Check connectivity to SD-WAN controllers such as vBond, vSmart, and vManage.
+        Confirm that the expected controller connections are established and healthy.
       </p>
 
       <pre><code>show sdwan control-connections</code></pre>
 
-      <h3>BFD セッションの確認</h3>
+      <h3>Check BFD Sessions</h3>
       <p>
-        SD-WAN トンネル上の BFD セッション状態を確認する。
-        必要な TLOC / peer とのセッションが確立していることを確認する。
+        Check BFD session state over SD-WAN tunnels.
+        Confirm that the required TLOC / peer sessions are established.
       </p>
 
       <pre><code>show sdwan bfd sessions</code></pre>
 
-      <h3>グローバルルーティングテーブルの確認</h3>
+      <h3>Check the Global Routing Table</h3>
       <p>
-        グローバルルーティングテーブルに必要な経路が存在することを確認する。
+        Confirm that required routes exist in the global routing table.
       </p>
 
       <pre><code>show ip route</code></pre>
 
-      <h3>VRF ルーティングテーブルの確認</h3>
+      <h3>Check VRF Routing Tables</h3>
       <p>
-        サービス VPN / VRF 側の経路を確認する。<code>XX</code> は確認対象の VRF 番号に置き換える。
+        Check routes on the service VPN / VRF side. Replace <code>XX</code> with the target VRF number.
       </p>
 
       <pre><code>show ip route vrf <span class="placeholder">&lt;XX&gt;</span></code></pre>
 
-      <h3>確認観点</h3>
+      <h3>Verification Points</h3>
       <ul>
-        <li><code>show sdwan control-connections</code> で SD-WAN コントローラとの接続が確立していること。</li>
-        <li><code>show sdwan bfd sessions</code> で必要な BFD セッションが確立していること。</li>
-        <li><code>show ip route</code> で管理系またはアンダーレイ側の必要経路が確認できること。</li>
-        <li><code>show ip route vrf &lt;XX&gt;</code> でサービス VPN / VRF 側の必要経路が確認できること。</li>
+        <li><code>show sdwan control-connections</code> shows established SD-WAN controller connections.</li>
+        <li><code>show sdwan bfd sessions</code> shows the required BFD sessions.</li>
+        <li><code>show ip route</code> shows the required management or underlay routes.</li>
+        <li><code>show ip route vrf &lt;XX&gt;</code> shows the required service VPN / VRF routes.</li>
       </ul>
     </section>
     </div>
 
     <div id="page-advanced" class="page">
       <section id="advanced-start">
-        <h2>Bootstrap ファイルが正しく読み込まれずに立ち上がってしまった場合の手順</h2>
-        <p class="meta">対象: Firewall 機能 / Cisco ThousandEyes などを使用している Cisco SD-WAN ルータ</p>
+        <h2>Procedure When the Bootstrap File Is Not Loaded Correctly</h2>
+        <p class="meta">Scope: Cisco SD-WAN routers using Firewall features, Cisco ThousandEyes, or similar advanced features</p>
 
         <div class="warning">
-          <span class="label">このページの位置づけ:</span>
-          <strong>Firewall 機能</strong>や <strong>Cisco ThousandEyes</strong> などの高度な機能を使用している場合、
-          基本手順の Bootstrap ファイル（<code>bootflash:ciscosdwan.cfg</code>）による起動では設定が正しく読み込まれないことが確認されている。
-          そのため、こうした構成では本ページの回避手順を使用する。
+          <span class="label">Purpose of this page:</span>
+          When using advanced features such as <strong>Firewall</strong> or <strong>Cisco ThousandEyes</strong>,
+          configuration may not be loaded correctly when booting with the Bootstrap file (<code>bootflash:ciscosdwan.cfg</code>) from the basic procedure.
+          Use this workaround procedure for those deployments.
         </div>
 
-        <h3>基本手順との違い</h3>
+        <h3>Difference from the Basic Procedure</h3>
         <p>
-          本手順では、Bootstrap ファイル（<code>bootflash:ciscosdwan.cfg</code>）からの設定読み込みに頼らず、
-          Controller Mode 上で CLI による設定操作を行い、
-          コントローラと接続するために必要最低限の設定（system パラメータ、VPN 0 トランスポート、Tunnel インターフェース）
-          を手動投入してコントロール接続を確立する。
+          This procedure does not rely on loading configuration from the Bootstrap file (<code>bootflash:ciscosdwan.cfg</code>).
+          Instead, perform CLI configuration in Controller Mode and manually enter the minimum required settings
+          (system parameters, VPN 0 transport, and tunnel interface) to establish control connections.
         </p>
         <p>
-          最低限の設定の考え方は、Cisco 公式の
+          The minimum configuration approach follows Cisco's official
           <a href="https://www.cisco.com/c/dam/en/us/td/docs/solutions/CVD/SDWAN/sdwan-wan-edge-onboarding-deploy-guide-2020nov.pdf">SD-WAN WAN Edge Onboarding Deploy Guide</a>
-          の「Option 3: Manual deployment for IOS-XE SD-WAN device」に準拠する。
+          section "Option 3: Manual deployment for IOS-XE SD-WAN device."
         </p>
 
         <div class="warning">
-          <span class="label">本手順の開始地点:</span>
-          本手順は、<strong>すでに Controller Mode の有効化（<code>controller-mode enable</code>）が完了し、
-          Bootstrap が正しく読み込まれないまま Controller Mode で立ち上がってきた状態</strong>からスタートする。
-          Factory Reset の実行、初期プロンプト対応、Controller Mode の有効化までは基本手順のとおり実施済みであることを前提とする。
+          <span class="label">Starting point:</span>
+          This procedure starts from the state where <strong>Controller Mode has already been enabled (<code>controller-mode enable</code>)
+          and the router has booted in Controller Mode without correctly loading the Bootstrap configuration</strong>.
+          Factory Reset execution, initial prompt handling, and Controller Mode enablement are assumed to have already been completed according to the basic procedure.
         </div>
 
         <div class="note">
-          <span class="label">作業の全体像:</span>
+          <span class="label">Workflow:</span>
           <ol>
-            <li>PnP プロセスの停止と最低限の設定の手動投入</li>
-            <li>コントロール接続の確認</li>
+            <li>Stop the PnP process and manually enter minimum configuration.</li>
+            <li>Check Control Connections</li>
           </ol>
         </div>
       </section>
 
       <section>
-        <h2>A-1. PnP プロセスの停止と最低限の設定投入</h2>
+        <h2>A-1. Stop PnP and Enter Minimum Configuration</h2>
         <p>
-          Controller Mode 起動後、ルータは起動時に PnP プロセスを自動的に開始する。
-          手動で設定を投入するため、まず PnP プロセスを停止する。
+          After booting in Controller Mode, the router automatically starts the PnP process.
+          Stop the PnP process first so that configuration can be entered manually.
         </p>
         <pre><code>pnpa service discovery stop</code></pre>
 
         <div class="note">
-          <span class="label">補足:</span>
-          Factory Reset 直後の SD-WAN WAN Edge のデフォルト認証情報は <code>admin/admin</code> である。
-          設定変更を保存するには、コンフィグレーションモードで <code>commit</code> を実行する。
+          <span class="label">Note:</span>
+          Immediately after Factory Reset, the default SD-WAN WAN Edge credentials are <code>admin/admin</code>.
+          To save configuration changes, run <code>commit</code> in configuration mode.
         </div>
 
-        <h3>Step 1: system パラメータの設定</h3>
+        <h3>Step 1: Configure system parameters</h3>
         <p>
-          hostname、system-ip、site-id、organization-name、vBond（IP アドレスまたは FQDN）を設定する。
-          あわせて <code>ip name-server</code> で DNS サーバーを指定する。
+          Configure hostname, system-ip, site-id, organization-name, and vBond (IP address or FQDN).
+          Also specify DNS servers with <code>ip name-server</code>.
         </p>
         <div class="warning">
-          <span class="label">必須:</span>
-          vBond を FQDN で指定している場合、名前解決ができないとコントローラへ接続できない。
-          <code>ip name-server <span class="placeholder">&lt;DNS_SERVER_IP&gt;</span></code> による DNS サーバーの設定を必ず行うこと。
-          ただし、DHCP などの環境で DNS サーバーが自動的に設定される場合は、この限りではない。
+          <span class="label">Required:</span>
+          If vBond is specified as an FQDN, the router cannot connect to controllers unless DNS resolution works.
+          Configure DNS servers with <code>ip name-server <span class="placeholder">&lt;DNS_SERVER_IP&gt;</span></code>.
+          This is not required if DNS servers are automatically assigned by DHCP or a similar mechanism.
         </div>
         <pre><code>config-transaction
 system
@@ -837,11 +853,11 @@ exit
 Uncommitted changes found, commit them? [yes/no/CANCEL] yes
 Commit complete.</code></pre>
 
-        <h3>Step 2: トランスポート（VPN 0）WAN インターフェースと Tunnel の設定</h3>
+        <h3>Step 2: Configure the transport (VPN 0) WAN interface and tunnel</h3>
         <p>
-          コントローラへ到達するためのトランスポート VPN 0 を設定する。WAN インターフェースに IP アドレスを設定し、
-          Tunnel インターフェースに encapsulation・color・ルーティング（動的またはデフォルトルート）を設定する。
-          Tunnel インターフェースを設定して初めて、WAN Edge は DTLS/TLS によるセキュアなコントロールプレーン接続を確立する。
+          Configure transport VPN 0 for controller reachability. Assign an IP address to the WAN interface,
+          then configure encapsulation, color, and routing (dynamic or default route) on the tunnel interface.
+          WAN Edge establishes secure DTLS/TLS control-plane connections only after the tunnel interface is configured.
         </p>
         <pre><code>config-transaction
 interface <span class="placeholder">&lt;WAN_INTERFACE&gt;</span>
@@ -872,71 +888,69 @@ Uncommitted changes found, commit them? [yes/no/CANCEL] yes
 Commit complete.</code></pre>
 
         <div class="note">
-          <span class="label">補足:</span>
-          <code>&lt;COLOR&gt;</code>（例: <code>mpls</code>、<code>biz-internet</code> など）やインターフェース名・経路は、
-          対象機器の実構成に合わせて置き換える。複数トランスポートを使用する場合は、各 WAN インターフェースに対して同様に設定する。
+          <span class="label">Note:</span>
+          Replace <code>&lt;COLOR&gt;</code> (for example, <code>mpls</code> or <code>biz-internet</code>), interface names, and routes according to the actual device configuration.
+          If multiple transports are used, configure each WAN interface similarly.
         </div>
       </section>
 
       <section>
-        <h2>A-2. コントロール接続と正常性の確認</h2>
+        <h2>A-2. Verify Control Connections and Health</h2>
         <p>
-          最低限の設定投入後、SD-WAN コントローラ（vBond / vSmart / vManage）との接続が確立されることを確認する。
-          コントロール接続確立後、vManage にデバイステンプレートが割り当てられている場合は、
-          設定がダウンロードされ既存設定が上書きされる。
+          After entering the minimum configuration, confirm that connections to SD-WAN controllers (vBond / vSmart / vManage) are established.
+          After control connections are established, if a device template is assigned in vManage,
+          configuration is downloaded and overwrites the current configuration.
         </p>
 
-        <h3>コントロール接続の確認</h3>
+        <h3>Check Control Connections</h3>
         <pre><code>show sdwan control-connections</code></pre>
 
-        <h3>BFD セッションの確認</h3>
+        <h3>Check BFD Sessions</h3>
         <pre><code>show sdwan bfd sessions</code></pre>
 
-        <h3>ルーティングテーブルの確認</h3>
+        <h3>Check Routing Tables</h3>
         <pre><code>show ip route
 show ip route vrf <span class="placeholder">&lt;XX&gt;</span></code></pre>
 
-        <h3>確認観点</h3>
+        <h3>Verification Points</h3>
         <ul>
-          <li><code>show sdwan control-connections</code> で SD-WAN コントローラとの接続が確立していること。</li>
-          <li><code>show sdwan bfd sessions</code> で必要な BFD セッションが確立していること。</li>
-          <li><code>show ip route</code> / <code>show ip route vrf &lt;XX&gt;</code> で必要経路が確認できること。</li>
-          <li>vManage 上で対象機器の Reachability が正常であり、テンプレート適用が完了していること。</li>
+          <li><code>show sdwan control-connections</code> shows established SD-WAN controller connections.</li>
+          <li><code>show sdwan bfd sessions</code> shows the required BFD sessions.</li>
+          <li>Required routes are visible in <code>show ip route</code> / <code>show ip route vrf &lt;XX&gt;</code>.</li>
+          <li>The target device reachability is healthy in vManage and template attachment has completed.</li>
         </ul>
 
         <div class="warning">
-          <span class="label">Firewall / ThousandEyes 機能の復旧について:</span>
+          <span class="label">Recovering Firewall / ThousandEyes features:</span>
           <p>
-            コントロール接続が確立し、vManage からデバイステンプレートが適用されても、
-            <strong>Firewall や ThousandEyes の機能はそれだけでは復旧しない</strong>。
-            これらの機能は、本手順で投入する最低限の設定とは別に、vManage 側で追加の手順が必要となる。
+            Even after control connections are established and a device template is applied from vManage,
+            <strong>Firewall and ThousandEyes features are not restored by that alone</strong>.
+            These features require additional vManage-side procedures separate from the minimum configuration entered in this procedure.
           </p>
           <ul>
             <li>
-              <strong>Firewall（UTD）機能:</strong>
-              Snort ベースの UTD（Unified Threat Defense）エンジンを Security Virtual Image として
-              vManage のソフトウェアリポジトリへアップロードし、セキュリティポリシー／コンテナプロファイルを
-              デバイステンプレートへ付与してインストールする必要がある。
+              <strong>Firewall (UTD) features:</strong>
+              Upload the Snort-based UTD (Unified Threat Defense) engine as a Security Virtual Image to the vManage software repository,
+              then attach the required security policy / container profile to the device template and install it.
             </li>
             <li>
-              <strong>ThousandEyes 機能:</strong>
-              ThousandEyes Enterprise Agent のイメージを vManage へアップロードし、
-              ThousandEyes Agent フィーチャーテンプレート（Account Group Token 等）を作成・付与して
-              エージェントを追加インストールする必要がある。
+              <strong>ThousandEyes features:</strong>
+              Upload the ThousandEyes Enterprise Agent image to vManage, create and attach the ThousandEyes Agent feature template
+              (including Account Group Token, etc.), and install the agent.
             </li>
           </ul>
-          <p>これらの具体的な手順は本手順書の対象外とする。詳細は以下の公式ドキュメントを参照すること。</p>
+          <p>The detailed procedures for these features are outside the scope of this guide. Refer to the official documentation below.</p>
           <ul>
             <li>
-              Firewall（UTD）:
+              Firewall (UTD):
               <a href="https://www.cisco.com/c/en/us/td/docs/routers/sdwan/configuration/security/ios-xe-17/security-book-xe/security-virtual-image.html">Cisco Catalyst SD-WAN Security Configuration Guide - Security Virtual Image</a>
-              ／
+              /
               <a href="https://www.cisco.com/c/en/us/support/docs/routers/sd-wan/218063-install-utd-security-virtual-image-on-ce.html">Install UTD Security Virtual Image on cEdge Routers</a>
             </li>
             <li>
               ThousandEyes:
               <a href="https://www.cisco.com/c/en/us/support/docs/routers/xe-sd-wan-routers/220324-configure-thousand-eyes-on-sd-wan-device.html">Configure ThousandEyes on SD-WAN Devices</a>
-              ／
+              /
               <a href="https://docs.thousandeyes.com/product-documentation/global-vantage-points/enterprise-agents/installing/cisco-devices/installation-methods/installing-enterprise-agents-on-cisco-routers-using-sd-wan-manager-feature-templates">Installing Enterprise Agents on Cisco Routers using SD-WAN Manager Feature Templates</a>
             </li>
           </ul>
@@ -946,36 +960,36 @@ show ip route vrf <span class="placeholder">&lt;XX&gt;</span></code></pre>
 
     <div id="page-os-restore" class="page">
       <section>
-        <h2>OS イメージ削除を伴う Secure Reset 手順</h2>
-        <p class="meta">対象: <code>factory reset all secure</code> を使用し、OS イメージを USB から戻す必要があるケース</p>
+        <h2>Secure Reset Procedure with OS Image Recovery</h2>
+        <p class="meta">Scope: Use this when <code>factory reset all secure</code> requires restoring the OS image from USB.</p>
 
         <div class="warning">
-          <span class="label">このページの位置づけ:</span>
-          本手順では Factory Reset 実行コマンドとして <code>factory reset all secure</code> を使用する。
-          このコマンドを実行すると、設定やユーザデータだけでなく、bootflash 上の OS イメージファイルも削除される場合がある。
-          そのため、作業前に Cisco 公式ダウンロードページから取得した OS イメージを USB へ配置し、
-          Factory Reset 後に USB から OS イメージをコピーし直す。
+          <span class="label">Purpose of this page:</span>
+          This procedure uses <code>factory reset all secure</code> as the Factory Reset command.
+          This command may delete not only configuration and user data, but also OS image files on bootflash.
+          Therefore, place an OS image downloaded from the official Cisco download page onto USB before the work,
+          then copy the OS image back from USB after Factory Reset.
         </div>
 
         <div class="note">
-          <span class="label">作業の全体像:</span>
+          <span class="label">Workflow:</span>
           <ol>
-            <li>現在の OS バージョンと、復旧に使用する公式 OS イメージファイル名を確認する。</li>
-            <li>Cisco 公式ダウンロードページから OS イメージを取得し、USB 上に配置する。</li>
-            <li><code>factory reset all secure</code> を実行する。</li>
-            <li>USB 上の OS イメージで起動し、bootflash へ OS イメージをコピーし直す。</li>
-            <li>BOOT 変数を設定し、再起動後に bootflash 上の OS イメージから起動することを確認する。</li>
+            <li>Confirm the current OS version and the official OS image filename to use for recovery.</li>
+            <li>Download the OS image from the official Cisco download page and place it on USB.</li>
+            <li>Run <code>factory reset all secure</code>.</li>
+            <li>Boot from the OS image on USB and copy the OS image back to bootflash.</li>
+            <li>Set the BOOT variable and confirm that the router boots from the OS image on bootflash after reload.</li>
           </ol>
         </div>
       </section>
 
       <section>
-        <h2>B-1. 作業前確認と USB の準備</h2>
+        <h2>B-1. Pre-check and USB Preparation</h2>
         <p>
-          Factory Reset 実行前に、現在起動している OS バージョンと、復旧に使用する OS イメージファイル名を確認する。
-          bootflash 上に残っている OS イメージはコピー元として使用しない。
-          USB は機器で認識できる形式で用意し、容量に余裕があることを確認する。
-          USB のデバイス名は機種や挿入スロットにより <code>usbflash0:</code> または <code>usbflash1:</code> など異なる場合がある。
+          Before Factory Reset, confirm the currently running OS version and the OS image filename to use for recovery.
+          Do not use an OS image remaining on bootflash as the source.
+          Prepare USB media in a format recognized by the router and confirm that it has enough capacity.
+          The USB device name may be <code>usbflash0:</code>, <code>usbflash1:</code>, or another name depending on the model and slot.
         </p>
 
         <pre><code>Router#show version | include System image
@@ -984,78 +998,78 @@ Router#dir bootflash:
 Router#dir usbflash0:</code></pre>
 
         <div class="note">
-          <span class="label">置き換え:</span>
-          以降の例では、OS イメージファイル名を <code>&lt;IOSXE_IMAGE.bin&gt;</code>、
-          USB のデバイス名を <code>usbflash0:</code> として記載する。
-          実機の出力に合わせて読み替えること。
+          <span class="label">Replace as needed:</span>
+          The examples below use <code>&lt;IOSXE_IMAGE.bin&gt;</code> as the OS image filename and
+          <code>usbflash0:</code> as the USB device name.
+          Adjust these values to match the actual device output.
         </div>
       </section>
 
       <section>
-        <h2>B-2. OS イメージを Cisco 公式ページから取得して USB へ配置</h2>
+        <h2>B-2. Download the OS Image from Cisco and Place It on USB</h2>
         <p>
-          ルータ本体の bootflash に残っている OS イメージは、Factory Reset 前の状態やファイル破損の影響を受けている可能性があるため、
-          本手順では使用しない。対象機種と導入予定バージョンに対応する OS イメージを
-          Cisco 公式ダウンロードページから作業端末へダウンロードし、USB へ配置する。
+          Do not use the OS image remaining on the router bootflash, because it may be affected by the pre-reset state or file corruption.
+          Download the OS image that matches the target model and planned version from the official Cisco download page
+          to the work computer, then place it on USB.
         </p>
 
         <ol>
-          <li>Cisco 公式ダウンロードページへアクセスし、対象機種に対応した IOS XE / SD-WAN イメージをダウンロードする。</li>
-          <li>ダウンロードページに掲載されているチェックサム値を控える。</li>
-          <li>作業端末上でダウンロードしたファイルのチェックサムを確認し、Cisco 掲載値と一致することを確認する。</li>
-          <li>確認済みの OS イメージファイルを USB のルートディレクトリへコピーする。</li>
-          <li>USB をルータへ挿入し、ルータからファイルが認識できることを確認する。</li>
+          <li>Access the official Cisco download page and download the IOS XE / SD-WAN image for the target model.</li>
+          <li>Record the checksum value shown on the download page.</li>
+          <li>Verify the checksum of the downloaded file on the work computer and confirm that it matches Cisco's published value.</li>
+          <li>Copy the verified OS image file to the root directory of the USB media.</li>
+          <li>Insert the USB media into the router and confirm that the router can see the file.</li>
         </ol>
 
         <pre><code>Router#dir usbflash0:
 Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
         <div class="warning">
-          <span class="label">必須:</span>
-          <code>factory reset all secure</code> 実行後は bootflash 上の OS イメージが失われる前提で作業する。
-          Cisco 公式ページから取得した OS イメージのチェックサム確認、USB への配置、
-          ルータから USB 上のファイルを読み出せることの確認が完了するまで Factory Reset を開始しないこと。
+          <span class="label">Required:</span>
+          After <code>factory reset all secure</code>, assume that the OS image on bootflash is lost.
+          Do not start Factory Reset until the checksum of the OS image downloaded from Cisco is verified,
+          the image is placed on USB, and the router can read the file from USB.
         </div>
       </section>
 
       <section>
-        <h2>B-3. Factory Reset の実行</h2>
+        <h2>B-3. Execute Factory Reset</h2>
         <p>
-          Cisco 公式ページから取得した OS イメージの USB 配置と読み出し確認後、以下のコマンドで Factory Reset を実行する。
-          確認プロンプトが表示された場合は、削除対象と影響を確認したうえで続行する。
+          After placing the Cisco-downloaded OS image on USB and confirming that it can be read, execute Factory Reset with the following command.
+          If confirmation prompts are displayed, review the deletion scope and impact before continuing.
         </p>
 
         <pre><code>Router#factory reset all secure</code></pre>
 
         <div class="warning">
-          <span class="label">禁止事項:</span>
-          Factory Reset 中は電源断、USB 抜去、強制再起動、コンソール入力による割り込みを行わないこと。
-          完了まで 30分から3時間程度かかる場合がある。
+          <span class="label">Do not:</span>
+          During Factory Reset, do not power off the device, remove the USB media, force reboot, or interrupt the operation from the console.
+          Completion can take approximately 30 minutes to 3 hours.
         </div>
       </section>
 
       <section>
-        <h2>B-4. USB 上の OS イメージから起動</h2>
+        <h2>B-4. Boot from the OS Image on USB</h2>
         <p>
-          Factory Reset 後、bootflash 上に起動可能な OS イメージがない場合は ROMMON で起動する。
-          USB が認識されていることを確認し、USB 上の OS イメージから一時的に起動する。
+          After Factory Reset, if no bootable OS image exists on bootflash, the router boots into ROMMON.
+          Confirm that USB is recognized, then temporarily boot from the OS image on USB.
         </p>
 
         <pre><code>rommon &gt; dir usbflash0:
 rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
         <div class="note">
-          <span class="label">補足:</span>
-          USB のデバイス名が異なる場合は <code>dir usbflash1:</code> などで認識状態を確認する。
-          USB から起動できない場合は、USB のフォーマット、挿入スロット、イメージファイル名、対象機種に対応した OS イメージであることを確認する。
+          <span class="label">Note:</span>
+          If the USB device name differs, check recognition with commands such as <code>dir usbflash1:</code>.
+          If the router cannot boot from USB, verify the USB format, slot, image filename, and that the OS image matches the target model.
         </div>
       </section>
 
       <section>
-        <h2>B-5. OS イメージを bootflash へコピー</h2>
+        <h2>B-5. Copy the OS Image to bootflash</h2>
         <p>
-          USB 上の OS イメージで起動できたら、初期プロンプトに対応して IOS コマンドプロンプトへ進む。
-          その後、USB から bootflash へ OS イメージファイルをコピーし直す。
+          After successfully booting from the OS image on USB, respond to the initial prompts and reach the IOS command prompt.
+          Then copy the OS image file from USB back to bootflash.
         </p>
 
         <pre><code>Router#dir usbflash0:
@@ -1065,17 +1079,17 @@ Router#dir bootflash:
 Router#verify /sha512 bootflash:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
         <div class="note">
-          <span class="label">容量確認:</span>
-          コピー前に <code>dir bootflash:</code> で空き容量を確認する。
-          容量が不足している場合は、不要ファイルがないかを確認し、必要に応じて保守手順に従って領域を確保する。
+          <span class="label">Capacity check:</span>
+          Before copying, check free space with <code>dir bootflash:</code>.
+          If capacity is insufficient, check for unnecessary files and free space according to the maintenance procedure.
         </div>
       </section>
 
       <section>
-        <h2>B-6. BOOT 変数の設定と起動確認</h2>
+        <h2>B-6. Set the BOOT Variable and Verify Boot</h2>
         <p>
-          bootflash へ OS イメージを戻したら、次回以降 bootflash 上の OS イメージから起動するよう BOOT 変数を設定する。
-          設定保存後に再起動し、USB を使用せずに起動できることを確認する。
+          After restoring the OS image to bootflash, set the BOOT variable so future boots use the OS image on bootflash.
+          Save the configuration, reload, and confirm that the router can boot without USB.
         </p>
 
         <pre><code>Router#configure terminal
@@ -1087,55 +1101,54 @@ Router#write memory
 Router#show boot
 Router#reload</code></pre>
 
-        <h3>再起動後の確認</h3>
+        <h3>Verification After Reload</h3>
         <pre><code>Router#show version | include System image
 Router#show boot
 Router#dir bootflash:</code></pre>
 
         <ul>
-          <li><code>show version</code> の System image が <code>bootflash:&lt;IOSXE_IMAGE.bin&gt;</code> を指していること。</li>
-          <li><code>show boot</code> で BOOT 変数が bootflash 上の OS イメージを指していること。</li>
-          <li>USB を抜いた状態でも再起動後に正常起動できること。</li>
+          <li>The System image in <code>show version</code> points to <code>bootflash:&lt;IOSXE_IMAGE.bin&gt;</code>.</li>
+          <li><code>show boot</code> shows that the BOOT variable points to the OS image on bootflash.</li>
+          <li>The router boots successfully after reload even with USB removed.</li>
         </ul>
       </section>
 
       <section>
-        <h2>B-7. 以降の復旧手順</h2>
+        <h2>B-7. Continue the Recovery Procedure</h2>
         <p>
-          OS イメージの復旧と bootflash からの正常起動を確認した後は、基本手順の
-          <strong>Factory Reset 後の初期プロンプト対応</strong>以降に戻り、
-          Bootstrap ファイルの再作成、Controller Mode の有効化、SD-WAN 正常性確認を実施する。
+          After recovering the OS image and confirming successful boot from bootflash, return to the basic procedure from
+          <strong>Respond to Initial Prompts After Factory Reset</strong> onward, then recreate the Bootstrap file, enable Controller Mode, and verify SD-WAN health.
         </p>
 
-        <button type="button" class="jump-btn" data-target="page-basic" data-scroll-target="basic-after-reset">基本手順7へ戻る</button>
+        <button type="button" class="jump-btn" data-target="page-basic" data-scroll-target="basic-after-reset">Return to Basic Procedure Step 7</button>
       </section>
     </div>
 
     <div id="page-reset-summary" class="page">
       <section>
-        <h2>リセットコマンドオプションサマリー</h2>
+        <h2>Reset Command Options Summary</h2>
 
         <div class="note">
-          <span class="label">出典:</span>
-          Cisco 公式ドキュメント
-          <a href="https://www.cisco.com/c/ja_jp/td/docs/routers/secure-routers/sec-8500-series/secure-8500-software-config-guide/m_perform_factory_reset_c8500.html">Cisco 8500 シリーズ セキュア ルータ ソフトウェア設定ガイド</a>
-          の内容を要約したもの。
+          <span class="label">Source:</span>
+          Cisco official documentation
+          <a href="https://www.cisco.com/c/ja_jp/td/docs/routers/secure-routers/sec-8500-series/secure-8500-software-config-guide/m_perform_factory_reset_c8500.html">Cisco 8500 Series Secure Router Software Configuration Guide</a>
+          summary.
         </div>
 
         <div class="warning">
-          <span class="label">位置づけ:</span>
-          本手順書では <code>factory reset all</code> を基本手順、
-          <code>factory reset all secure</code> を OS イメージ復旧を伴う手順として扱う。
-          下表は、関連する <code>factory reset</code> コマンドの削除範囲を比較するための参考情報とする。
+          <span class="label">Context:</span>
+          In this guide, <code>factory reset all</code> is treated as the basic procedure, and
+          <code>factory reset all secure</code> is treated as the procedure that requires OS image recovery.
+          The tables below are reference information for comparing the deletion scope of related <code>factory reset</code> commands.
         </div>
       </section>
 
       <section>
-        <h2>C-1. 消去 / 保持されるデータの比較</h2>
+        <h2>C-1. Comparison of Data Erased / Retained</h2>
         <table class="summary-table">
           <thead>
             <tr>
-              <th>項目</th>
+              <th>Item</th>
               <th><code>factory reset all secure</code></th>
               <th><code>factory reset all</code></th>
               <th><code>factory reset keep-licensing-info</code></th>
@@ -1144,55 +1157,55 @@ Router#dir bootflash:</code></pre>
           </thead>
           <tbody>
             <tr>
-              <th>すべての書き込み可能ファイルシステム / 個人データ</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+              <th>All writable file systems / personal data</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>ユーザーデータ / Startup config / Running config</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+              <th>User data / Startup config / Running config</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>NVRAM データ</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+              <th>NVRAM data</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>ROMMON 変数</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+              <th>ROMMON variables</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>OBFL ログ</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+              <th>OBFL logs</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>USB の内容 / リモート FRU データ</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+              <th>USB contents / remote FRU data</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>ログイン情報 / 認証情報 / SUDI 証明書 / PKI キー / FIPS 関連キー</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+              <th>Login information / credentials / SUDI certificates / PKI keys / FIPS-related keys</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>コンフィギュレーションレジスタ値</th>
-              <td class="reset-erase">× 消去</td><td class="reset-keep">残る</td><td class="reset-keep">残る</td><td class="reset-keep">残る</td>
+              <th>Configuration register value</th>
+              <td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td><td class="reset-keep">Kept</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>ライセンス使用情報</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td><td class="reset-keep">残る</td>
+              <th>License usage information</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-keep">Kept</td><td class="reset-keep">Kept</td>
             </tr>
             <tr>
-              <th>SED 対応ディスク上のデータ</th>
-              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td>
+              <th>Data on SED-capable disks</th>
+              <td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td><td class="reset-erase">× Erase</td>
             </tr>
           </tbody>
         </table>
       </section>
 
       <section>
-        <h2>C-2. リセット動作・運用面の比較</h2>
+        <h2>C-2. Reset Behavior and Operational Comparison</h2>
         <table class="summary-table">
           <thead>
             <tr>
-              <th>観点</th>
+              <th>Aspect</th>
               <th><code>factory reset all secure</code></th>
               <th><code>factory reset all</code></th>
               <th><code>factory reset keep-licensing-info</code></th>
@@ -1201,83 +1214,83 @@ Router#dir bootflash:</code></pre>
           </thead>
           <tbody>
             <tr>
-              <th>主な目的</th>
-              <td>NIST CLEAR / PURGE 準拠で永続ストレージを完全消去。RMA、廃棄、侵害対応向け。</td>
-              <td>設定・データを全消去し、フル機能状態へリセット。</td>
-              <td>全消去するがライセンス情報は残し、再登録の手間を省く。</td>
-              <td>SED 対応ディスクのデータのみ消去。</td>
+              <th>Primary purpose</th>
+              <td>Completely erase persistent storage in compliance with NIST CLEAR / PURGE. Intended for RMA, disposal, or incident response.</td>
+              <td>Erase configuration and data, then reset the device to a full-function state.</td>
+              <td>Erase data but retain license information to avoid re-registration work.</td>
+              <td>Erase only data on SED-capable disks.</td>
             </tr>
             <tr>
-              <th>起動イメージ</th>
-              <td>消去される。ローカル保存でも全削除。TFTP / USB のイメージから起動が必要。</td>
-              <td>ローカル起動時はバックアップを作成し、リセット後に復元。</td>
-              <td>保持される。</td>
-              <td>保持される。</td>
+              <th>Boot image</th>
+              <td>Erased. Even locally stored images are deleted. Booting from TFTP / USB image is required.</td>
+              <td>When booted locally, a backup is created and restored after reset.</td>
+              <td>Retained.</td>
+              <td>Retained.</td>
             </tr>
             <tr>
-              <th>リセット後の起動</th>
-              <td>常に ROMMON にフォールバック。</td>
-              <td>config-register 値に従って起動。</td>
-              <td>config-register 値に従って起動。</td>
-              <td>config-register 値に従って起動。リロードを伴う。</td>
+              <th>Boot after reset</th>
+              <td>Always falls back to ROMMON.</td>
+              <td>Boots according to the config-register value.</td>
+              <td>Boots according to the config-register value.</td>
+              <td>Boots according to the config-register value. A reload occurs.</td>
             </tr>
             <tr>
-              <th>所要時間の目安</th>
-              <td>約 5 分から 2 時間。</td>
-              <td>約 30 分。HA 構成では最大 3 時間。</td>
-              <td>約 20 分以上。</td>
-              <td>リロードを伴い比較的短時間。</td>
+              <th>Estimated duration</th>
+              <td>Approximately 5 minutes to 2 hours.</td>
+              <td>Approximately 30 minutes. Up to 3 hours in HA deployments.</td>
+              <td>Approximately 20 minutes or longer.</td>
+              <td>Relatively short, with a reload.</td>
             </tr>
             <tr>
-              <th>VTY セッションからの実行</th>
-              <td>非対応。コンソールから実行する。</td>
-              <td>可。ただしセッションは復元されない。</td>
-              <td>可。ただしセッションは復元されない。</td>
-              <td>可。ただしセッションは復元されない。</td>
+              <th>Execution from VTY session</th>
+              <td>Not supported. Execute from console.</td>
+              <td>Supported, but the session is not restored.</td>
+              <td>Supported, but the session is not restored.</td>
+              <td>Supported, but the session is not restored.</td>
             </tr>
             <tr>
-              <th>NIST 標準</th>
-              <td>NIST CLEAR / PURGE に準拠。</td>
-              <td>対象外。</td>
-              <td>対象外。</td>
-              <td>対象外。</td>
+              <th>NIST standard</th>
+              <td>Compliant with NIST CLEAR / PURGE.</td>
+              <td>Not applicable.</td>
+              <td>Not applicable.</td>
+              <td>Not applicable.</td>
             </tr>
           </tbody>
         </table>
       </section>
 
       <section>
-        <h2>C-3. どのコマンドを使うか</h2>
+        <h2>C-3. Which Command to Use</h2>
         <table>
           <tbody>
             <tr>
               <th><code>factory reset all secure</code></th>
-              <td>完全消去したい場合に使用する。RMA 返送、廃棄、侵害を受けた機器、機密情報を確実に抹消したい場合向け。起動イメージも消えるため、事前に公式イメージを準備する。</td>
+              <td>Use this when you need complete erasure. Suitable for RMA return, disposal, compromised devices, or securely removing sensitive data. The boot image is also erased, so prepare an official image beforehand.</td>
             </tr>
             <tr>
               <th><code>factory reset all</code></th>
-              <td>標準のリセット。機器を再利用する、別サイトへ移設する、設定レジスタとローカル起動イメージは残したい場合向け。</td>
+              <td>Standard reset. Suitable when reusing the device, moving it to another site, and retaining the configuration register and local boot image.</td>
             </tr>
             <tr>
               <th><code>factory reset keep-licensing-info</code></th>
-              <td>リセットは行うが、ライセンス情報を維持したい場合に使用する。再登録や SLAC 取得などの手間を避けたい場合向け。</td>
+              <td>Use this when resetting the device while retaining license information. Suitable when you want to avoid re-registration or SLAC retrieval work.</td>
             </tr>
             <tr>
               <th><code>factory reset sed</code></th>
-              <td>SED ドライブのみ消去したい場合に使用する。C8550-G2 / C8570-G2 で、ブートフラッシュが SED 有効の場合が対象。ハードディスクは該当しない。</td>
+              <td>Use this when erasing only SED drives. Applies to C8550-G2 / C8570-G2 when bootflash is SED-enabled. Hard disks are not included.</td>
             </tr>
           </tbody>
         </table>
       </section>
 
       <section>
-        <h2>C-4. 実行前の共通注意</h2>
+        <h2>C-4. Common Pre-execution Notes</h2>
         <div class="warning">
-          <span class="label">必須:</span>
-          実行前にイメージ、設定、個人データを必ずバックアップする。
-          リセット中は電源を切らない。ISSU / ISSD が進行中の場合は実行しない。
-          適用済みソフトウェアパッチはリセット後に復元されない。
-          ZTP が設定済みの場合、リセット完了後に ZTP 構成で再起動する。
+          <span class="label">Required:</span>
+          Always back up images, configuration, and personal data before execution.
+          Do not power off the device during reset. Do not execute while ISSU / ISSD is in progress.
+          Applied software patches are not restored after reset.
+          If ZTP is configured, the device restarts with the ZTP configuration after reset completes.
         </div>
 
         <pre><code>Router#show version | include System image
@@ -1357,17 +1370,17 @@ Router#dir usbflash0:</code></pre>
           var button = document.createElement('button');
           button.type = 'button';
           button.className = 'copy-btn';
-          button.textContent = 'コピー';
+          button.textContent = 'Copy';
           button.addEventListener('click', function () {
             copyText(pre.innerText).then(function () {
-              button.textContent = 'コピー済み';
+              button.textContent = 'Copied';
               window.setTimeout(function () {
-                button.textContent = 'コピー';
+                button.textContent = 'Copy';
               }, 1600);
             }).catch(function () {
-              button.textContent = '失敗';
+              button.textContent = 'Failed';
               window.setTimeout(function () {
-                button.textContent = 'コピー';
+                button.textContent = 'Copy';
               }, 1600);
             });
           });

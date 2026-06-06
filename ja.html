@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cisco SD-WAN ルータ Factory Reset 手順書</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --text: #17202a;
+      --muted: #5d6d7e;
+      --border: #d5d8dc;
+      --bg: #ffffff;
+      --panel: #f8f9fa;
+      --warning: #eff6ff;
+      --warning-border: #93c5fd;
+      --code: #1f2937;
+    }
+
+    body {
+      margin: 0;
+      background: #f8fafc;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+    }
+
+    main {
+      box-sizing: border-box;
+      width: min(1240px, 100%);
+      margin: 0 auto;
+      padding: 32px 32px 64px 304px;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.35;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+    }
+
+    h2 {
+      margin-top: 40px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+      font-size: 1.35rem;
+    }
+
+    h3 {
+      margin-top: 28px;
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin: 12px 0;
+    }
+
+    ul, ol {
+      padding-left: 1.6rem;
+    }
+
+    .meta {
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .language-switch {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      margin: 0 0 18px;
+      font-size: 0.92rem;
+    }
+
+    .language-switch a {
+      color: #1d4ed8;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .language-switch a:hover {
+      text-decoration: underline;
+    }
+
+    .note,
+    .warning {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 18px 0;
+      background: var(--panel);
+    }
+
+    .warning {
+      border-color: var(--warning-border);
+      background: var(--warning);
+    }
+
+    .label {
+      display: inline-block;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.95em;
+    }
+
+    pre {
+      overflow-x: auto;
+      border-radius: 8px;
+      margin: 16px 0;
+      padding: 16px;
+      border: 1px solid var(--border);
+      background: var(--code);
+      color: #f9fafb;
+      line-height: 1.5;
+      font-size: 0.92rem;
+    }
+
+    .code-block {
+      position: relative;
+      margin: 16px 0;
+    }
+
+    .code-block pre {
+      margin: 0;
+      padding: 14px 96px 14px 16px;
+    }
+
+    .code-block.no-copy pre {
+      padding-right: 16px;
+    }
+
+    .copy-btn {
+      appearance: none;
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      cursor: pointer;
+      border: 1px solid #93c5fd;
+      border-radius: 6px;
+      background: #1d4ed8;
+      color: #fff;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1;
+      padding: 6px 10px;
+    }
+
+    .copy-btn:hover {
+      background: #1e40af;
+    }
+
+    .placeholder {
+      color: #7dd3fc;
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--panel);
+      width: 28%;
+    }
+
+    .summary-table th {
+      width: auto;
+    }
+
+    .reset-erase,
+    .reset-keep {
+      text-align: center;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .reset-erase {
+      background: #fff1f2;
+      color: #b91c1c;
+    }
+
+    .reset-keep {
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .page-nav {
+      display: flex;
+      position: fixed;
+      top: 150px;
+      left: max(24px, calc(50% - 620px + 32px));
+      z-index: 10;
+      flex-direction: column;
+      gap: 4px;
+      width: 232px;
+      max-height: calc(100vh - 182px);
+      overflow-y: auto;
+      margin: 0;
+      padding: 14px;
+      border: 1px solid #dbeafe;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+      box-shadow: 0 14px 35px rgba(30, 64, 175, 0.12);
+    }
+
+    .page-nav::before {
+      content: "Navigation";
+      color: #1d4ed8;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin: 0 4px 8px;
+      text-transform: uppercase;
+    }
+
+    .page-btn {
+      appearance: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-left: 4px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: #475569;
+      font: inherit;
+      font-weight: 600;
+      line-height: 1.35;
+      padding: 10px 10px 10px 12px;
+      text-align: left;
+    }
+
+    .page-btn:hover {
+      background: rgba(37, 99, 235, 0.08);
+      color: #1e3a8a;
+    }
+
+    .page-btn.active {
+      background: #ffffff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+      border-left-color: #2563eb;
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.12);
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 4px 24px 28px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+    }
+
+    .callout-advanced {
+      border: 1px solid var(--warning-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 10px 0;
+      background: var(--warning);
+    }
+
+    .callout-advanced p {
+      margin: 0 0 8px;
+    }
+
+    .jump-btn {
+      appearance: none;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      font: inherit;
+      font-weight: 600;
+      padding: 7px 12px;
+    }
+
+    .jump-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .jump-btn code {
+      color: inherit;
+    }
+
+    @media print {
+      .page-nav,
+      .jump-btn,
+      .copy-btn {
+        display: none;
+      }
+
+      .page {
+        display: block;
+      }
+
+      body {
+        font-size: 11pt;
+      }
+
+      main {
+        max-width: none;
+        padding: 0;
+      }
+
+      pre {
+        margin: 16px 0;
+        padding: 16px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    }
+
+    @media (max-width: 1240px) {
+      main {
+        max-width: 980px;
+        padding: 40px 24px 64px;
+      }
+
+      .page-nav {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: auto;
+        max-height: none;
+        overflow: visible;
+        margin: 24px 0 8px;
+        box-shadow: none;
+      }
+
+      .page-nav::before {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Cisco SD-WAN ルータ Factory Reset 手順書</h1>
+    <p class="meta">対象: Cisco SD-WAN ルータ / Bootstrap ファイル再作成 / Factory Reset</p>
+    <p class="language-switch">English: <a href="index.html">Main page</a></p>
+
+    <nav class="page-nav">
+      <button type="button" class="page-btn active" data-target="page-basic">基本手順（factory reset all）</button>
+      <button type="button" class="page-btn" data-target="page-os-restore">Secure Reset（factory reset all secure）</button>
+      <button type="button" class="page-btn" data-target="page-advanced">Bootstrap ファイルが正しく読み込まれずに立ち上がってしまった場合</button>
+      <button type="button" class="page-btn" data-target="page-reset-summary">リセットコマンドオプションサマリー</button>
+    </nav>
+
+    <div id="page-basic" class="page active">
+    <section>
+      <h2>1. 目的</h2>
+      <p>
+        Cisco SD-WAN ルータを Factory Reset し、リセット後に Bootstrap ファイル
+        <code>bootflash:ciscosdwan.cfg</code> から再度ルータを立ち上げ直す。
+        本手順は、ルータが SD-WAN の Controller Mode で動作している状態から開始し、
+        CLI で Factory Reset コマンドを直接実行する流れを対象とする。
+      </p>
+      <div class="warning">
+        <span class="label">重要:</span>
+        Factory Reset は不可逆操作であり、設定、ユーザ情報、ライセンス、OBFLログ、ROMMON変数、
+        ユーザデータ、起動設定などが削除される。実行前に必ず Bootstrap 内容と必要な設定情報を退避すること。
+      </div>
+    </section>
+
+    <section>
+      <h2>2. 前提条件</h2>
+      <table>
+        <tbody>
+          <tr>
+            <th>対象機器</th>
+            <td><span class="placeholder">&lt;対象ルータ名 / 機種名&gt;</span></td>
+          </tr>
+          <tr>
+            <th>作業者</th>
+            <td><span class="placeholder">&lt;作業者名&gt;</span></td>
+          </tr>
+          <tr>
+            <th>作業日時</th>
+            <td><span class="placeholder">&lt;YYYY-MM-DD HH:MM&gt;</span></td>
+          </tr>
+          <tr>
+            <th>コンソール接続</th>
+            <td>Factory Reset 後に操作できるよう、コンソール接続を確保しておく。</td>
+          </tr>
+          <tr>
+            <th>開始時の動作モード</th>
+            <td>SD-WAN の Controller Mode で動作している状態から作業を開始する。</td>
+          </tr>
+          <tr>
+            <th>電源</th>
+            <td>Factory Reset 中は電源断や再起動操作を行わない。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <span class="label">作業開始前の確認:</span>
+        現在動作中のコンピューターが想定通りのものであり、現在動作中のルータの Config が想定通りであることを確認してください。
+      </div>
+    </section>
+
+    <section>
+      <h2>3. Bootstrap 設定の作成</h2>
+      <p>ルータ上で以下のコマンドを実行し、Bootstrap 設定を作成する。</p>
+      <pre><code>request platform software sdwan bootstrap-config save</code></pre>
+
+      <h3>確認ポイント</h3>
+      <ul>
+        <li>コマンドがエラーなく完了すること。</li>
+        <li><code>bootflash:ciscosdwan.cfg</code> が作成されていること。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Bootstrap 内容の取得</h2>
+      <p>
+        作成された Bootstrap ファイルの内容を表示し、出力内容をコピーする。
+        表示コマンドは環境に合わせて確認すること。
+      </p>
+      <pre><code>dir bootflash: | include ciscosdwan.cfg
+more bootflash:ciscosdwan.cfg</code></pre>
+
+      <div class="note">
+        <span class="label">注意:</span>
+        Bootstrap 内には UUID、system-ip、site-id、vBond 情報、ホスト名、ユーザ設定などの機器固有情報が含まれる。
+        認証情報や secret hash は手順書に実値を固定せず、権限のある保管場所で管理すること。
+      </div>
+    </section>
+
+    <section>
+      <h2>5. TCLSH 用 Bootstrap 再作成コマンドの準備</h2>
+      <p>
+        Factory Reset 後に全ファイルが削除された場合を想定し、コピーした Bootstrap 内容を以下の
+        <code>tclsh</code> コマンド形式に貼り付ける。
+        この手順では、ルータへコマンドを送信するのではなく、手元の作業手順書または
+        流し込み用コンフィグを編集し、Factory Reset 後に使用する投入用コマンドを作成する。
+        作成したコマンドは、後続手順でコンソール接続からルータへ流し込み、
+        <code>bootflash:ciscosdwan.cfg</code> を再作成するために使用する。
+      </p>
+
+      <pre><code>tclsh
+puts [open "bootflash:ciscosdwan.cfg" w+] {<span class="placeholder">&lt;ここに Bootstrap ファイルの内容を貼り付ける&gt;</span>
+}</code></pre>
+
+      <h3>貼り付けフォーマット例</h3>
+      <pre><code>tclsh
+puts [open "bootflash:ciscosdwan.cfg" w+] {Content-Type: multipart/mixed; boundary="===============&lt;BOUNDARY_ID&gt;=="
+MIME-Version: 1.0
+
+--===============&lt;BOUNDARY_ID&gt;==
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config"
+
+#cloud-config
+vinitparam:
+ - uuid : <span class="placeholder">&lt;DEVICE_UUID&gt;</span>
+
+--===============&lt;BOUNDARY_ID&gt;==
+Content-Type: text/cloud-boothook; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="config-&lt;DEVICE_UUID&gt;.txt"
+
+#cloud-boothook
+system
+ system-ip             <span class="placeholder">&lt;SYSTEM_IP&gt;</span>
+ site-id               <span class="placeholder">&lt;SITE_ID&gt;</span>
+ organization-name     <span class="placeholder">&lt;ORGANIZATION_NAME&gt;</span>
+ vbond                 <span class="placeholder">&lt;VBOND_FQDN&gt;</span> port <span class="placeholder">&lt;VBOND_PORT&gt;</span>
+!
+hostname <span class="placeholder">&lt;HOSTNAME&gt;</span>
+username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_HASH&gt;</span>
+!
+<span class="placeholder">&lt;以降、実機から取得した Bootstrap 設定を貼り付ける&gt;</span>
+--===============&lt;BOUNDARY_ID&gt;==--
+}</code></pre>
+
+    </section>
+
+    <section id="basic-factory-reset">
+      <h2>6. Factory Reset の実行</h2>
+      <p>
+        SD-WAN の Controller Mode で動作している状態から、以下のコマンドで Factory Reset を直接実行する。
+      </p>
+      <button type="button" class="jump-btn" data-target="page-os-restore">
+        Secure Reset（<code>factory reset all secure</code>）を実行する場合は、OS イメージ復旧手順へ進む
+      </button>
+      <pre><code>factory reset all</code></pre>
+
+      <p>確認プロンプトが複数回表示されるため、内容を確認して Enter を押す。</p>
+      <pre><code>The factory reset operation is irreversible for all operations. Are you sure? [confirm]
+
+The following will be deleted as a part of factory reset:
+ 1: All writable file systems and personal data
+ 2: OBFL logs
+ 3: Licenses
+ 4: Userdata and Startup config
+ 5: Rommon variables
+ 6: User Credentials
+
+The system will reload to perform factory reset.
+This operation can take anywhere between 30 minutes to 3 hours
+DO NOT UNPLUG THE POWER OR INTERRUPT THE OPERATION
+Are you sure you want to continue? [confirm]
+
+Factory reset will take a backup of the boot image if the system is currently booted from an image stored locally.
+If the current boot image is a remote image or stored on a usb/nim-ssd, please take a backup of the image before executing this command.
+Are you sure you want to continue? [confirm]</code></pre>
+
+      <h3>実行後ログ例</h3>
+      <pre><code>*May 20 03:15:59.159: SED security lock disabled
+*May 20 03:16:00.116: %SYS-5-RELOAD: Reload requested by Exec. Reload Reason: Factory Reset</code></pre>
+
+      <div class="warning">
+        <span class="label">禁止事項:</span>
+        Factory Reset 完了まで 30分から3時間程度かかる場合がある。処理中は電源を抜かず、
+        強制再起動や操作割り込みを行わないこと。Factory Reset 作業と再起動が確実に完了するまでは、
+        コンソール入力も行わないこと。
+      </div>
+
+      <h3>オプション: ROMMON モードで起動した場合</h3>
+      <div class="note">
+        <span class="label">補足:</span>
+        Factory Reset 後に ROMMON モードで立ち上がってきた場合は、以下のコマンドで
+        ルーターを起動し直す。オプション作業の要否は筐体型番に応じて判断する。
+      </div>
+      <pre><code>rommon &gt; confreg 0x2102
+rommon &gt; boot</code></pre>
+    </section>
+
+    <section id="basic-after-reset">
+      <h2>7. Factory Reset 後の初期プロンプト対応</h2>
+      <p>
+        Factory Reset 実行後、完了まで数時間待機する。以下の
+        <code>System Configuration Dialog</code> が表示されたら、初期設定ダイアログには入らず
+        <code>no</code> を入力する。
+      </p>
+
+      <pre><code>         --- System Configuration Dialog ---
+
+Would you like to enter the initial configuration dialog? [yes/no]: no</code></pre>
+
+      <p>
+        続けて <code>enable secret</code> の入力を求められるため、一時的なパスワードを入力する。
+        ここで入力するパスワードは、この後の作業を進めるための一時的なものとする。
+      </p>
+
+      <pre><code>Enter enable secret: <span class="placeholder">&lt;一時パスワードを入力&gt;</span>
+Confirm enable secret: <span class="placeholder">&lt;一時パスワードを再入力&gt;</span></code></pre>
+
+      <p>
+        パスワード入力後、動作モード移行時の選択肢が表示される。
+        ここでは設定を保存せず IOS コマンドプロンプトへ進むため、<code>0</code> を選択する。
+      </p>
+
+      <pre><code>[0] Go to the IOS command prompt without saving this config.
+[1] Return back to the setup without saving this config.
+[2] Save this configuration to nvram and exit.
+
+Enter your selection [2]: 0</code></pre>
+
+      <h3>Autonomous Mode の確認</h3>
+      <p>
+        IOS コマンドプロンプトへ移行したら、<code>show version</code> を実行し、
+        出力内に <code>Autonomous</code> の文字列が表示されていることを確認する。
+        これにより、Factory Reset 後の起動状態が Autonomous Mode であることを確認する。
+      </p>
+
+      <pre><code>Router#show version
+<span class="placeholder">&lt;出力内に Autonomous が表示されていることを確認&gt;</span></code></pre>
+
+      <div class="note">
+        <span class="label">補足:</span>
+        この段階では NVRAM へ設定を保存しない。Bootstrap ファイルを再作成してから、
+        後続手順で必要な起動・適用確認を行う。
+      </div>
+    </section>
+
+    <section>
+      <h2>8. Bootstrap ファイルの再作成</h2>
+      <p>
+        IOS コマンドプロンプトへ移行したら、<code>tclsh</code> を起動し、
+        事前に準備した Bootstrap 内容を <code>bootflash:ciscosdwan.cfg</code> として再作成する。
+      </p>
+
+      <pre><code>Router#tclsh
+Router(tcl)#puts [open "bootflash:ciscosdwan.cfg" w+] {Content-Type: multipart/mixed; boundary="===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>=="
+MIME-Version: 1.0
+
+--===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>==
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config"
+
+#cloud-config
+vinitparam:
+ - uuid : <span class="placeholder">&lt;DEVICE_UUID&gt;</span>
+
+--===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>==
+Content-Type: text/cloud-boothook; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="config-<span class="placeholder">&lt;DEVICE_UUID&gt;</span>.txt"
+
+#cloud-boothook
+system
+ system-ip             <span class="placeholder">&lt;SYSTEM_IP&gt;</span>
+ overlay-id            <span class="placeholder">&lt;OVERLAY_ID&gt;</span>
+ site-id               <span class="placeholder">&lt;SITE_ID&gt;</span>
+ organization-name     <span class="placeholder">&lt;ORGANIZATION_NAME&gt;</span>
+ vbond                 <span class="placeholder">&lt;VBOND_FQDN&gt;</span> port <span class="placeholder">&lt;VBOND_PORT&gt;</span>
+!
+system mode insecure
+hostname <span class="placeholder">&lt;HOSTNAME&gt;</span>
+username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_HASH&gt;</span>
+!
+<span class="placeholder">&lt;事前に取得した Bootstrap 設定の残りを貼り付ける&gt;</span>
+--===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>==--
+}
+Router(tcl)#exit
+Router#</code></pre>
+
+      <div class="note">
+        <span class="label">補足:</span>
+        実機では複数行貼り付け中に <code>+&gt;</code> の継続プロンプトが表示される場合がある。
+        <code>+&gt;</code> はルータ側の表示であり、入力する文字ではない。
+      </div>
+
+      <div class="warning">
+        <span class="label">注意:</span>
+        Bootstrap 内容は必ず <code>{</code> と <code>}</code> の中に貼り付ける。
+        secret hash などに含まれる <code>$</code> 文字が Tcl で変換されないようにするため、
+        ダブルクォートでは囲まないこと。
+      </div>
+
+      <h3>再作成後の確認</h3>
+      <p>
+        <code>tclsh</code> を終了後、作成された Bootstrap ファイルの内容を確認する。
+        先頭に <code>Content-Type: multipart/mixed</code> が表示され、
+        <code>#cloud-config</code> と <code>#cloud-boothook</code> が含まれていることを確認する。
+      </p>
+
+      <pre><code>Router#more bootflash:ciscosdwan.cfg
+Content-Type: multipart/mixed; boundary="===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>=="
+MIME-Version: 1.0
+
+--===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>==
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config"
+
+#cloud-config
+vinitparam:
+ - uuid : <span class="placeholder">&lt;DEVICE_UUID&gt;</span>
+
+--===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>==
+Content-Type: text/cloud-boothook; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="config-<span class="placeholder">&lt;DEVICE_UUID&gt;</span>.txt"
+
+#cloud-boothook
+system
+ system-ip             <span class="placeholder">&lt;SYSTEM_IP&gt;</span>
+ overlay-id            <span class="placeholder">&lt;OVERLAY_ID&gt;</span>
+ site-id               <span class="placeholder">&lt;SITE_ID&gt;</span>
+<span class="placeholder">&lt;以降、Bootstrap 設定が続く&gt;</span></code></pre>
+    </section>
+
+    <section>
+      <h2>9. Controller Mode の有効化</h2>
+      <p>
+        Bootstrap ファイルを再作成し、内容確認が完了したら、
+        以下のコマンドで Controller Mode を有効化する。
+      </p>
+
+      <pre><code>Router#controller-mode enable</code></pre>
+
+      <p>
+        Controller Mode の有効化により NVRAM ファイルシステムと設定ファイルが削除され、
+        機器が再起動される。表示される確認プロンプトの内容を確認し、Enter を押す。
+      </p>
+
+      <pre><code>Enabling controller mode will erase the nvram filesystem, remove all configuration files, and reload the box!
+Ensure the BOOT variable points to a valid image
+Continue? [confirm]
+WARNING:
+Boot variable either does not exist or buffer is too small
+This may impact autoboot of the router. Proceed with caution
+Do you wish to proceed with reload anyway[confirm]</code></pre>
+
+      <h3>実行後ログ例</h3>
+      <pre><code>*May 20 04:24:20.549: %IOSXE_RP_CFG_NOT-3-BOOT_VAR_NOT_SET: Either the boot variable does not exist or the buffer is too small.Keep it blank.
+*May 20 04:24:21.177: %SYS-7-NV_BLOCK_INIT: Initialized the geometry of nvram
+*May 20 04:24:21.725: %BOOT-6-MODECHANGE: Mode change success</code></pre>
+
+      <div class="warning">
+        <span class="label">注意:</span>
+        <code>controller-mode enable</code> 実行後は設定ファイル削除と再起動が行われる。
+        BOOT 変数に関する警告が表示される場合があるため、事前に起動イメージの状態を確認してから実行すること。
+      </div>
+
+      <button type="button" class="jump-btn" data-target="page-advanced" data-scroll-target="advanced-start">
+        Config が正しく読み込まれなかった場合は、Bootstrap 読み込み失敗時の手順へ進む
+      </button>
+    </section>
+
+    <section>
+      <h2>10. 再起動後の SD-WAN 正常性確認</h2>
+      <p>
+        Controller Mode 有効化後の再起動が完了したら、Bootstrap から SD-WAN Config が正常に読み込まれ、
+        SD-WAN コントローラと接続できていることを確認する。
+      </p>
+
+      <h3>コントロール接続の確認</h3>
+      <p>
+        vBond、vSmart、vManage などの SD-WAN コントローラとの接続状態を確認する。
+        想定するコントローラへの接続が確立していること、接続状態が正常であることを確認する。
+      </p>
+
+      <pre><code>show sdwan control-connections</code></pre>
+
+      <h3>BFD セッションの確認</h3>
+      <p>
+        SD-WAN トンネル上の BFD セッション状態を確認する。
+        必要な TLOC / peer とのセッションが確立していることを確認する。
+      </p>
+
+      <pre><code>show sdwan bfd sessions</code></pre>
+
+      <h3>グローバルルーティングテーブルの確認</h3>
+      <p>
+        グローバルルーティングテーブルに必要な経路が存在することを確認する。
+      </p>
+
+      <pre><code>show ip route</code></pre>
+
+      <h3>VRF ルーティングテーブルの確認</h3>
+      <p>
+        サービス VPN / VRF 側の経路を確認する。<code>XX</code> は確認対象の VRF 番号に置き換える。
+      </p>
+
+      <pre><code>show ip route vrf <span class="placeholder">&lt;XX&gt;</span></code></pre>
+
+      <h3>確認観点</h3>
+      <ul>
+        <li><code>show sdwan control-connections</code> で SD-WAN コントローラとの接続が確立していること。</li>
+        <li><code>show sdwan bfd sessions</code> で必要な BFD セッションが確立していること。</li>
+        <li><code>show ip route</code> で管理系またはアンダーレイ側の必要経路が確認できること。</li>
+        <li><code>show ip route vrf &lt;XX&gt;</code> でサービス VPN / VRF 側の必要経路が確認できること。</li>
+      </ul>
+    </section>
+    </div>
+
+    <div id="page-advanced" class="page">
+      <section id="advanced-start">
+        <h2>Bootstrap ファイルが正しく読み込まれずに立ち上がってしまった場合の手順</h2>
+        <p class="meta">対象: Firewall 機能 / Cisco ThousandEyes などを使用している Cisco SD-WAN ルータ</p>
+
+        <div class="warning">
+          <span class="label">このページの位置づけ:</span>
+          <strong>Firewall 機能</strong>や <strong>Cisco ThousandEyes</strong> などの高度な機能を使用している場合、
+          基本手順の Bootstrap ファイル（<code>bootflash:ciscosdwan.cfg</code>）による起動では設定が正しく読み込まれないことが確認されている。
+          そのため、こうした構成では本ページの回避手順を使用する。
+        </div>
+
+        <h3>基本手順との違い</h3>
+        <p>
+          本手順では、Bootstrap ファイル（<code>bootflash:ciscosdwan.cfg</code>）からの設定読み込みに頼らず、
+          Controller Mode 上で CLI による設定操作を行い、
+          コントローラと接続するために必要最低限の設定（system パラメータ、VPN 0 トランスポート、Tunnel インターフェース）
+          を手動投入してコントロール接続を確立する。
+        </p>
+        <p>
+          最低限の設定の考え方は、Cisco 公式の
+          <a href="https://www.cisco.com/c/dam/en/us/td/docs/solutions/CVD/SDWAN/sdwan-wan-edge-onboarding-deploy-guide-2020nov.pdf">SD-WAN WAN Edge Onboarding Deploy Guide</a>
+          の「Option 3: Manual deployment for IOS-XE SD-WAN device」に準拠する。
+        </p>
+
+        <div class="warning">
+          <span class="label">本手順の開始地点:</span>
+          本手順は、<strong>すでに Controller Mode の有効化（<code>controller-mode enable</code>）が完了し、
+          Bootstrap が正しく読み込まれないまま Controller Mode で立ち上がってきた状態</strong>からスタートする。
+          Factory Reset の実行、初期プロンプト対応、Controller Mode の有効化までは基本手順のとおり実施済みであることを前提とする。
+        </div>
+
+        <div class="note">
+          <span class="label">作業の全体像:</span>
+          <ol>
+            <li>PnP プロセスの停止と最低限の設定の手動投入</li>
+            <li>コントロール接続の確認</li>
+          </ol>
+        </div>
+      </section>
+
+      <section>
+        <h2>A-1. PnP プロセスの停止と最低限の設定投入</h2>
+        <p>
+          Controller Mode 起動後、ルータは起動時に PnP プロセスを自動的に開始する。
+          手動で設定を投入するため、まず PnP プロセスを停止する。
+        </p>
+        <pre><code>pnpa service discovery stop</code></pre>
+
+        <div class="note">
+          <span class="label">補足:</span>
+          Factory Reset 直後の SD-WAN WAN Edge のデフォルト認証情報は <code>admin/admin</code> である。
+          設定変更を保存するには、コンフィグレーションモードで <code>commit</code> を実行する。
+        </div>
+
+        <h3>Step 1: system パラメータの設定</h3>
+        <p>
+          hostname、system-ip、site-id、organization-name、vBond（IP アドレスまたは FQDN）を設定する。
+          あわせて <code>ip name-server</code> で DNS サーバーを指定する。
+        </p>
+        <div class="warning">
+          <span class="label">必須:</span>
+          vBond を FQDN で指定している場合、名前解決ができないとコントローラへ接続できない。
+          <code>ip name-server <span class="placeholder">&lt;DNS_SERVER_IP&gt;</span></code> による DNS サーバーの設定を必ず行うこと。
+          ただし、DHCP などの環境で DNS サーバーが自動的に設定される場合は、この限りではない。
+        </div>
+        <pre><code>config-transaction
+system
+ system-ip            <span class="placeholder">&lt;SYSTEM_IP&gt;</span>
+ site-id              <span class="placeholder">&lt;SITE_ID&gt;</span>
+ organization-name    <span class="placeholder">&lt;ORGANIZATION_NAME&gt;</span>
+ vbond                <span class="placeholder">&lt;VBOND_IP_OR_FQDN&gt;</span>
+ exit
+!
+hostname <span class="placeholder">&lt;HOSTNAME&gt;</span>
+ip name-server <span class="placeholder">&lt;DNS_SERVER_IP&gt;</span>
+exit
+Uncommitted changes found, commit them? [yes/no/CANCEL] yes
+Commit complete.</code></pre>
+
+        <h3>Step 2: トランスポート（VPN 0）WAN インターフェースと Tunnel の設定</h3>
+        <p>
+          コントローラへ到達するためのトランスポート VPN 0 を設定する。WAN インターフェースに IP アドレスを設定し、
+          Tunnel インターフェースに encapsulation・color・ルーティング（動的またはデフォルトルート）を設定する。
+          Tunnel インターフェースを設定して初めて、WAN Edge は DTLS/TLS によるセキュアなコントロールプレーン接続を確立する。
+        </p>
+        <pre><code>config-transaction
+interface <span class="placeholder">&lt;WAN_INTERFACE&gt;</span>
+ description <span class="placeholder">&lt;TRANSPORT_DESCRIPTION&gt;</span>
+ no shutdown
+ ip address <span class="placeholder">&lt;WAN_IP&gt;</span> <span class="placeholder">&lt;WAN_MASK&gt;</span>
+ exit
+!
+interface Tunnel<span class="placeholder">&lt;TUNNEL_ID&gt;</span>
+ no shutdown
+ ip unnumbered <span class="placeholder">&lt;WAN_INTERFACE&gt;</span>
+ ipv6 unnumbered <span class="placeholder">&lt;WAN_INTERFACE&gt;</span>
+ tunnel source <span class="placeholder">&lt;WAN_INTERFACE&gt;</span>
+ tunnel mode sdwan
+ exit
+!
+sdwan
+ interface <span class="placeholder">&lt;WAN_INTERFACE&gt;</span>
+  tunnel-interface
+   encapsulation ipsec
+   color <span class="placeholder">&lt;COLOR&gt;</span>
+  exit
+ exit
+!
+ip route 0.0.0.0 0.0.0.0 <span class="placeholder">&lt;WAN_GATEWAY&gt;</span>
+end
+Uncommitted changes found, commit them? [yes/no/CANCEL] yes
+Commit complete.</code></pre>
+
+        <div class="note">
+          <span class="label">補足:</span>
+          <code>&lt;COLOR&gt;</code>（例: <code>mpls</code>、<code>biz-internet</code> など）やインターフェース名・経路は、
+          対象機器の実構成に合わせて置き換える。複数トランスポートを使用する場合は、各 WAN インターフェースに対して同様に設定する。
+        </div>
+      </section>
+
+      <section>
+        <h2>A-2. コントロール接続と正常性の確認</h2>
+        <p>
+          最低限の設定投入後、SD-WAN コントローラ（vBond / vSmart / vManage）との接続が確立されることを確認する。
+          コントロール接続確立後、vManage にデバイステンプレートが割り当てられている場合は、
+          設定がダウンロードされ既存設定が上書きされる。
+        </p>
+
+        <h3>コントロール接続の確認</h3>
+        <pre><code>show sdwan control-connections</code></pre>
+
+        <h3>BFD セッションの確認</h3>
+        <pre><code>show sdwan bfd sessions</code></pre>
+
+        <h3>ルーティングテーブルの確認</h3>
+        <pre><code>show ip route
+show ip route vrf <span class="placeholder">&lt;XX&gt;</span></code></pre>
+
+        <h3>確認観点</h3>
+        <ul>
+          <li><code>show sdwan control-connections</code> で SD-WAN コントローラとの接続が確立していること。</li>
+          <li><code>show sdwan bfd sessions</code> で必要な BFD セッションが確立していること。</li>
+          <li><code>show ip route</code> / <code>show ip route vrf &lt;XX&gt;</code> で必要経路が確認できること。</li>
+          <li>vManage 上で対象機器の Reachability が正常であり、テンプレート適用が完了していること。</li>
+        </ul>
+
+        <div class="warning">
+          <span class="label">Firewall / ThousandEyes 機能の復旧について:</span>
+          <p>
+            コントロール接続が確立し、vManage からデバイステンプレートが適用されても、
+            <strong>Firewall や ThousandEyes の機能はそれだけでは復旧しない</strong>。
+            これらの機能は、本手順で投入する最低限の設定とは別に、vManage 側で追加の手順が必要となる。
+          </p>
+          <ul>
+            <li>
+              <strong>Firewall（UTD）機能:</strong>
+              Snort ベースの UTD（Unified Threat Defense）エンジンを Security Virtual Image として
+              vManage のソフトウェアリポジトリへアップロードし、セキュリティポリシー／コンテナプロファイルを
+              デバイステンプレートへ付与してインストールする必要がある。
+            </li>
+            <li>
+              <strong>ThousandEyes 機能:</strong>
+              ThousandEyes Enterprise Agent のイメージを vManage へアップロードし、
+              ThousandEyes Agent フィーチャーテンプレート（Account Group Token 等）を作成・付与して
+              エージェントを追加インストールする必要がある。
+            </li>
+          </ul>
+          <p>これらの具体的な手順は本手順書の対象外とする。詳細は以下の公式ドキュメントを参照すること。</p>
+          <ul>
+            <li>
+              Firewall（UTD）:
+              <a href="https://www.cisco.com/c/en/us/td/docs/routers/sdwan/configuration/security/ios-xe-17/security-book-xe/security-virtual-image.html">Cisco Catalyst SD-WAN Security Configuration Guide - Security Virtual Image</a>
+              ／
+              <a href="https://www.cisco.com/c/en/us/support/docs/routers/sd-wan/218063-install-utd-security-virtual-image-on-ce.html">Install UTD Security Virtual Image on cEdge Routers</a>
+            </li>
+            <li>
+              ThousandEyes:
+              <a href="https://www.cisco.com/c/en/us/support/docs/routers/xe-sd-wan-routers/220324-configure-thousand-eyes-on-sd-wan-device.html">Configure ThousandEyes on SD-WAN Devices</a>
+              ／
+              <a href="https://docs.thousandeyes.com/product-documentation/global-vantage-points/enterprise-agents/installing/cisco-devices/installation-methods/installing-enterprise-agents-on-cisco-routers-using-sd-wan-manager-feature-templates">Installing Enterprise Agents on Cisco Routers using SD-WAN Manager Feature Templates</a>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <div id="page-os-restore" class="page">
+      <section>
+        <h2>OS イメージ削除を伴う Secure Reset 手順</h2>
+        <p class="meta">対象: <code>factory reset all secure</code> を使用し、OS イメージを USB から戻す必要があるケース</p>
+
+        <div class="warning">
+          <span class="label">このページの位置づけ:</span>
+          本手順では Factory Reset 実行コマンドとして <code>factory reset all secure</code> を使用する。
+          このコマンドを実行すると、設定やユーザデータだけでなく、bootflash 上の OS イメージファイルも削除される場合がある。
+          そのため、作業前に Cisco 公式ダウンロードページから取得した OS イメージを USB へ配置し、
+          Factory Reset 後に USB から OS イメージをコピーし直す。
+        </div>
+
+        <div class="note">
+          <span class="label">作業の全体像:</span>
+          <ol>
+            <li>現在の OS バージョンと、復旧に使用する公式 OS イメージファイル名を確認する。</li>
+            <li>Cisco 公式ダウンロードページから OS イメージを取得し、USB 上に配置する。</li>
+            <li><code>factory reset all secure</code> を実行する。</li>
+            <li>USB 上の OS イメージで起動し、bootflash へ OS イメージをコピーし直す。</li>
+            <li>BOOT 変数を設定し、再起動後に bootflash 上の OS イメージから起動することを確認する。</li>
+          </ol>
+        </div>
+      </section>
+
+      <section>
+        <h2>B-1. 作業前確認と USB の準備</h2>
+        <p>
+          Factory Reset 実行前に、現在起動している OS バージョンと、復旧に使用する OS イメージファイル名を確認する。
+          bootflash 上に残っている OS イメージはコピー元として使用しない。
+          USB は機器で認識できる形式で用意し、容量に余裕があることを確認する。
+          USB のデバイス名は機種や挿入スロットにより <code>usbflash0:</code> または <code>usbflash1:</code> など異なる場合がある。
+        </p>
+
+        <pre><code>Router#show version | include System image
+Router#show boot
+Router#dir bootflash:
+Router#dir usbflash0:</code></pre>
+
+        <div class="note">
+          <span class="label">置き換え:</span>
+          以降の例では、OS イメージファイル名を <code>&lt;IOSXE_IMAGE.bin&gt;</code>、
+          USB のデバイス名を <code>usbflash0:</code> として記載する。
+          実機の出力に合わせて読み替えること。
+        </div>
+      </section>
+
+      <section>
+        <h2>B-2. OS イメージを Cisco 公式ページから取得して USB へ配置</h2>
+        <p>
+          ルータ本体の bootflash に残っている OS イメージは、Factory Reset 前の状態やファイル破損の影響を受けている可能性があるため、
+          本手順では使用しない。対象機種と導入予定バージョンに対応する OS イメージを
+          Cisco 公式ダウンロードページから作業端末へダウンロードし、USB へ配置する。
+        </p>
+
+        <ol>
+          <li>Cisco 公式ダウンロードページへアクセスし、対象機種に対応した IOS XE / SD-WAN イメージをダウンロードする。</li>
+          <li>ダウンロードページに掲載されているチェックサム値を控える。</li>
+          <li>作業端末上でダウンロードしたファイルのチェックサムを確認し、Cisco 掲載値と一致することを確認する。</li>
+          <li>確認済みの OS イメージファイルを USB のルートディレクトリへコピーする。</li>
+          <li>USB をルータへ挿入し、ルータからファイルが認識できることを確認する。</li>
+        </ol>
+
+        <pre><code>Router#dir usbflash0:
+Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+        <div class="warning">
+          <span class="label">必須:</span>
+          <code>factory reset all secure</code> 実行後は bootflash 上の OS イメージが失われる前提で作業する。
+          Cisco 公式ページから取得した OS イメージのチェックサム確認、USB への配置、
+          ルータから USB 上のファイルを読み出せることの確認が完了するまで Factory Reset を開始しないこと。
+        </div>
+      </section>
+
+      <section>
+        <h2>B-3. Factory Reset の実行</h2>
+        <p>
+          Cisco 公式ページから取得した OS イメージの USB 配置と読み出し確認後、以下のコマンドで Factory Reset を実行する。
+          確認プロンプトが表示された場合は、削除対象と影響を確認したうえで続行する。
+        </p>
+
+        <pre><code>Router#factory reset all secure</code></pre>
+
+        <div class="warning">
+          <span class="label">禁止事項:</span>
+          Factory Reset 中は電源断、USB 抜去、強制再起動、コンソール入力による割り込みを行わないこと。
+          完了まで 30分から3時間程度かかる場合がある。
+        </div>
+      </section>
+
+      <section>
+        <h2>B-4. USB 上の OS イメージから起動</h2>
+        <p>
+          Factory Reset 後、bootflash 上に起動可能な OS イメージがない場合は ROMMON で起動する。
+          USB が認識されていることを確認し、USB 上の OS イメージから一時的に起動する。
+        </p>
+
+        <pre><code>rommon &gt; dir usbflash0:
+rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+        <div class="note">
+          <span class="label">補足:</span>
+          USB のデバイス名が異なる場合は <code>dir usbflash1:</code> などで認識状態を確認する。
+          USB から起動できない場合は、USB のフォーマット、挿入スロット、イメージファイル名、対象機種に対応した OS イメージであることを確認する。
+        </div>
+      </section>
+
+      <section>
+        <h2>B-5. OS イメージを bootflash へコピー</h2>
+        <p>
+          USB 上の OS イメージで起動できたら、初期プロンプトに対応して IOS コマンドプロンプトへ進む。
+          その後、USB から bootflash へ OS イメージファイルをコピーし直す。
+        </p>
+
+        <pre><code>Router#dir usbflash0:
+Router#dir bootflash:
+Router#copy usbflash0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
+Router#dir bootflash:
+Router#verify /sha512 bootflash:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+        <div class="note">
+          <span class="label">容量確認:</span>
+          コピー前に <code>dir bootflash:</code> で空き容量を確認する。
+          容量が不足している場合は、不要ファイルがないかを確認し、必要に応じて保守手順に従って領域を確保する。
+        </div>
+      </section>
+
+      <section>
+        <h2>B-6. BOOT 変数の設定と起動確認</h2>
+        <p>
+          bootflash へ OS イメージを戻したら、次回以降 bootflash 上の OS イメージから起動するよう BOOT 変数を設定する。
+          設定保存後に再起動し、USB を使用せずに起動できることを確認する。
+        </p>
+
+        <pre><code>Router#configure terminal
+Router(config)#no boot system
+Router(config)#boot system bootflash:&lt;IOSXE_IMAGE.bin&gt;
+Router(config)#config-register 0x2102
+Router(config)#end
+Router#write memory
+Router#show boot
+Router#reload</code></pre>
+
+        <h3>再起動後の確認</h3>
+        <pre><code>Router#show version | include System image
+Router#show boot
+Router#dir bootflash:</code></pre>
+
+        <ul>
+          <li><code>show version</code> の System image が <code>bootflash:&lt;IOSXE_IMAGE.bin&gt;</code> を指していること。</li>
+          <li><code>show boot</code> で BOOT 変数が bootflash 上の OS イメージを指していること。</li>
+          <li>USB を抜いた状態でも再起動後に正常起動できること。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>B-7. 以降の復旧手順</h2>
+        <p>
+          OS イメージの復旧と bootflash からの正常起動を確認した後は、基本手順の
+          <strong>Factory Reset 後の初期プロンプト対応</strong>以降に戻り、
+          Bootstrap ファイルの再作成、Controller Mode の有効化、SD-WAN 正常性確認を実施する。
+        </p>
+
+        <button type="button" class="jump-btn" data-target="page-basic" data-scroll-target="basic-after-reset">基本手順7へ戻る</button>
+      </section>
+    </div>
+
+    <div id="page-reset-summary" class="page">
+      <section>
+        <h2>リセットコマンドオプションサマリー</h2>
+
+        <div class="note">
+          <span class="label">出典:</span>
+          Cisco 公式ドキュメント
+          <a href="https://www.cisco.com/c/ja_jp/td/docs/routers/secure-routers/sec-8500-series/secure-8500-software-config-guide/m_perform_factory_reset_c8500.html">Cisco 8500 シリーズ セキュア ルータ ソフトウェア設定ガイド</a>
+          の内容を要約したもの。
+        </div>
+
+        <div class="warning">
+          <span class="label">位置づけ:</span>
+          本手順書では <code>factory reset all</code> を基本手順、
+          <code>factory reset all secure</code> を OS イメージ復旧を伴う手順として扱う。
+          下表は、関連する <code>factory reset</code> コマンドの削除範囲を比較するための参考情報とする。
+        </div>
+      </section>
+
+      <section>
+        <h2>C-1. 消去 / 保持されるデータの比較</h2>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th><code>factory reset all secure</code></th>
+              <th><code>factory reset all</code></th>
+              <th><code>factory reset keep-licensing-info</code></th>
+              <th><code>factory reset sed</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>すべての書き込み可能ファイルシステム / 個人データ</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>ユーザーデータ / Startup config / Running config</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>NVRAM データ</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>ROMMON 変数</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>OBFL ログ</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>USB の内容 / リモート FRU データ</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>ログイン情報 / 認証情報 / SUDI 証明書 / PKI キー / FIPS 関連キー</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>コンフィギュレーションレジスタ値</th>
+              <td class="reset-erase">× 消去</td><td class="reset-keep">残る</td><td class="reset-keep">残る</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>ライセンス使用情報</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-keep">残る</td><td class="reset-keep">残る</td>
+            </tr>
+            <tr>
+              <th>SED 対応ディスク上のデータ</th>
+              <td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td><td class="reset-erase">× 消去</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>C-2. リセット動作・運用面の比較</h2>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>観点</th>
+              <th><code>factory reset all secure</code></th>
+              <th><code>factory reset all</code></th>
+              <th><code>factory reset keep-licensing-info</code></th>
+              <th><code>factory reset sed</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>主な目的</th>
+              <td>NIST CLEAR / PURGE 準拠で永続ストレージを完全消去。RMA、廃棄、侵害対応向け。</td>
+              <td>設定・データを全消去し、フル機能状態へリセット。</td>
+              <td>全消去するがライセンス情報は残し、再登録の手間を省く。</td>
+              <td>SED 対応ディスクのデータのみ消去。</td>
+            </tr>
+            <tr>
+              <th>起動イメージ</th>
+              <td>消去される。ローカル保存でも全削除。TFTP / USB のイメージから起動が必要。</td>
+              <td>ローカル起動時はバックアップを作成し、リセット後に復元。</td>
+              <td>保持される。</td>
+              <td>保持される。</td>
+            </tr>
+            <tr>
+              <th>リセット後の起動</th>
+              <td>常に ROMMON にフォールバック。</td>
+              <td>config-register 値に従って起動。</td>
+              <td>config-register 値に従って起動。</td>
+              <td>config-register 値に従って起動。リロードを伴う。</td>
+            </tr>
+            <tr>
+              <th>所要時間の目安</th>
+              <td>約 5 分から 2 時間。</td>
+              <td>約 30 分。HA 構成では最大 3 時間。</td>
+              <td>約 20 分以上。</td>
+              <td>リロードを伴い比較的短時間。</td>
+            </tr>
+            <tr>
+              <th>VTY セッションからの実行</th>
+              <td>非対応。コンソールから実行する。</td>
+              <td>可。ただしセッションは復元されない。</td>
+              <td>可。ただしセッションは復元されない。</td>
+              <td>可。ただしセッションは復元されない。</td>
+            </tr>
+            <tr>
+              <th>NIST 標準</th>
+              <td>NIST CLEAR / PURGE に準拠。</td>
+              <td>対象外。</td>
+              <td>対象外。</td>
+              <td>対象外。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>C-3. どのコマンドを使うか</h2>
+        <table>
+          <tbody>
+            <tr>
+              <th><code>factory reset all secure</code></th>
+              <td>完全消去したい場合に使用する。RMA 返送、廃棄、侵害を受けた機器、機密情報を確実に抹消したい場合向け。起動イメージも消えるため、事前に公式イメージを準備する。</td>
+            </tr>
+            <tr>
+              <th><code>factory reset all</code></th>
+              <td>標準のリセット。機器を再利用する、別サイトへ移設する、設定レジスタとローカル起動イメージは残したい場合向け。</td>
+            </tr>
+            <tr>
+              <th><code>factory reset keep-licensing-info</code></th>
+              <td>リセットは行うが、ライセンス情報を維持したい場合に使用する。再登録や SLAC 取得などの手間を避けたい場合向け。</td>
+            </tr>
+            <tr>
+              <th><code>factory reset sed</code></th>
+              <td>SED ドライブのみ消去したい場合に使用する。C8550-G2 / C8570-G2 で、ブートフラッシュが SED 有効の場合が対象。ハードディスクは該当しない。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>C-4. 実行前の共通注意</h2>
+        <div class="warning">
+          <span class="label">必須:</span>
+          実行前にイメージ、設定、個人データを必ずバックアップする。
+          リセット中は電源を切らない。ISSU / ISSD が進行中の場合は実行しない。
+          適用済みソフトウェアパッチはリセット後に復元されない。
+          ZTP が設定済みの場合、リセット完了後に ZTP 構成で再起動する。
+        </div>
+
+        <pre><code>Router#show version | include System image
+Router#show boot
+Router#dir bootflash:
+Router#dir usbflash0:</code></pre>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var pages = document.querySelectorAll('.page');
+      var navButtons = document.querySelectorAll('.page-nav .page-btn');
+
+      function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          return navigator.clipboard.writeText(text);
+        }
+
+        return new Promise(function (resolve, reject) {
+          var textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'fixed';
+          textarea.style.top = '-9999px';
+          document.body.appendChild(textarea);
+          textarea.select();
+
+          try {
+            if (document.execCommand('copy')) {
+              resolve();
+            } else {
+              reject(new Error('copy command failed'));
+            }
+          } catch (err) {
+            reject(err);
+          } finally {
+            document.body.removeChild(textarea);
+          }
+        });
+      }
+
+      function shouldShowCopyButton(pre) {
+        var text = pre.innerText.trim();
+        var outputPatterns = [
+          /^The factory reset operation/m,
+          /^Router#more bootflash:ciscosdwan\.cfg/m,
+          /^Router#show version\n/m,
+          /^         --- System Configuration Dialog ---/m,
+          /^Enter enable secret:/m,
+          /^\[0\] Go to the IOS command prompt/m,
+          /^Enabling controller mode will erase/m,
+          /^\*May /m
+        ];
+
+        return !outputPatterns.some(function (pattern) {
+          return pattern.test(text);
+        });
+      }
+
+      function setupCopyButtons() {
+        document.querySelectorAll('pre').forEach(function (pre) {
+          if (pre.parentElement && pre.parentElement.classList.contains('code-block')) {
+            return;
+          }
+
+          var wrapper = document.createElement('div');
+          wrapper.className = shouldShowCopyButton(pre) ? 'code-block' : 'code-block no-copy';
+          pre.parentNode.insertBefore(wrapper, pre);
+          wrapper.appendChild(pre);
+
+          if (!shouldShowCopyButton(pre)) {
+            return;
+          }
+
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'copy-btn';
+          button.textContent = 'コピー';
+          button.addEventListener('click', function () {
+            copyText(pre.innerText).then(function () {
+              button.textContent = 'コピー済み';
+              window.setTimeout(function () {
+                button.textContent = 'コピー';
+              }, 1600);
+            }).catch(function () {
+              button.textContent = '失敗';
+              window.setTimeout(function () {
+                button.textContent = 'コピー';
+              }, 1600);
+            });
+          });
+
+          wrapper.appendChild(button);
+        });
+      }
+
+      function showPage(targetId, scrollTargetId) {
+        pages.forEach(function (page) {
+          page.classList.toggle('active', page.id === targetId);
+        });
+        navButtons.forEach(function (btn) {
+          btn.classList.toggle('active', btn.getAttribute('data-target') === targetId);
+        });
+
+        if (scrollTargetId) {
+          var scrollTarget = document.getElementById(scrollTargetId);
+          if (scrollTarget) {
+            scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+          }
+        }
+
+        window.scrollTo(0, 0);
+      }
+
+      document.querySelectorAll('[data-target]').forEach(function (el) {
+        el.addEventListener('click', function () {
+          showPage(el.getAttribute('data-target'), el.getAttribute('data-scroll-target'));
+        });
+      });
+
+      setupCopyButtons();
+    })();
+  </script>
+</body>
+</html>
