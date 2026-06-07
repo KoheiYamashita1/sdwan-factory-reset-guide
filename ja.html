@@ -435,9 +435,11 @@
       <h2>4. Bootstrap 内容の取得</h2>
       <p>
         作成された Bootstrap ファイルの内容を表示し、出力内容をコピーする。
+        Cisco IOS XE ルーターでは <code>terminal length 0</code> を実行し、途中で停止させずに全体を表示する。
         表示コマンドは環境に合わせて確認すること。
       </p>
-      <pre><code>dir bootflash: | include ciscosdwan.cfg
+      <pre><code>terminal length 0
+dir bootflash: | include ciscosdwan.cfg
 more bootflash:ciscosdwan.cfg</code></pre>
 
       <div class="note">
@@ -663,7 +665,8 @@ Router#</code></pre>
         <code>#cloud-config</code> と <code>#cloud-boothook</code> が含まれていることを確認する。
       </p>
 
-      <pre><code>Router#more bootflash:ciscosdwan.cfg
+      <pre><code>Router#terminal length 0
+Router#more bootflash:ciscosdwan.cfg
 Content-Type: multipart/mixed; boundary="===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>=="
 MIME-Version: 1.0
 
@@ -1344,7 +1347,7 @@ Router#dir usbflash0:</code></pre>
         var text = pre.innerText.trim();
         var outputPatterns = [
           /^The factory reset operation/m,
-          /^Router#more bootflash:ciscosdwan\.cfg/m,
+          /^Router#terminal length 0\nRouter#more bootflash:ciscosdwan\.cfg/m,
           /^Router#show version\n/m,
           /^         --- System Configuration Dialog ---/m,
           /^Enter enable secret:/m,

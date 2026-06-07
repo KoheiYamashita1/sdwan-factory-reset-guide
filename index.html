@@ -435,9 +435,11 @@
       <h2>4. Retrieve the Bootstrap Content</h2>
       <p>
         Display the generated Bootstrap file and copy the output.
+        On Cisco IOS XE routers, run <code>terminal length 0</code> so the full content is displayed without stopping.
         Confirm the display command that is appropriate for your environment.
       </p>
-      <pre><code>dir bootflash: | include ciscosdwan.cfg
+      <pre><code>terminal length 0
+dir bootflash: | include ciscosdwan.cfg
 more bootflash:ciscosdwan.cfg</code></pre>
 
       <div class="note">
@@ -662,7 +664,8 @@ Router#</code></pre>
         <code>#cloud-config</code> and <code>#cloud-boothook</code> are included.
       </p>
 
-      <pre><code>Router#more bootflash:ciscosdwan.cfg
+      <pre><code>Router#terminal length 0
+Router#more bootflash:ciscosdwan.cfg
 Content-Type: multipart/mixed; boundary="===============<span class="placeholder">&lt;BOUNDARY_ID&gt;</span>=="
 MIME-Version: 1.0
 
@@ -1338,7 +1341,7 @@ Router#dir usbflash0:</code></pre>
         var text = pre.innerText.trim();
         var outputPatterns = [
           /^The factory reset operation/m,
-          /^Router#more bootflash:ciscosdwan\.cfg/m,
+          /^Router#terminal length 0\nRouter#more bootflash:ciscosdwan\.cfg/m,
           /^Router#show version\n/m,
           /^         --- System Configuration Dialog ---/m,
           /^Enter enable secret:/m,
