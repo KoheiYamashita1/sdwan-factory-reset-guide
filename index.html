@@ -363,6 +363,7 @@
       <button type="button" class="page-btn active" data-target="page-basic">Basic Procedure (factory reset all)</button>
       <button type="button" class="page-btn" data-target="page-os-restore">Secure Reset (factory reset all secure)</button>
       <button type="button" class="page-btn" data-target="page-advanced">If the Bootstrap file is not loaded correctly</button>
+      <button type="button" class="page-btn" data-target="page-shell-access">System Shell Access Details</button>
       <button type="button" class="page-btn" data-target="page-reset-summary">Reset Command Options Summary</button>
     </nav>
 
@@ -1127,6 +1128,117 @@ Router#dir bootflash:</code></pre>
       </section>
     </div>
 
+
+    <div id="page-shell-access" class="page">
+      <section>
+        <h2>System Shell Access Details</h2>
+        <p class="meta">Scope: IOS XE / IOS XE SD-WAN system shell login using Consent Token authorization</p>
+
+        <div class="warning">
+          <span class="label">Important:</span>
+          System shell access can affect device operation and should be used only when required for troubleshooting,
+          log collection, or Cisco TAC-guided work. Use it only with appropriate authorization and operational approval.
+        </div>
+
+        <div class="note">
+          <span class="label">Reference:</span>
+          This page summarizes Cisco Community guidance:
+          <a href="https://community.cisco.com/t5/tkb-%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AD%E3%83%B3%E3%82%B0-%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/ios-xe-xe-sd-wan-system-shell-login-%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6/ta-p/4666712">IOS-XE/XE SD-WAN: system shell login</a>.
+        </div>
+      </section>
+
+      <section>
+        <h2>D-1. When system shell access is needed</h2>
+        <p>
+          On IOS XE / IOS XE SD-WAN 16.11 and later, system shell login is protected by a Consent Token process.
+          It is generally used when Cisco TAC asks for shell-level access to collect logs or investigate platform-level behavior.
+          It is not a normal operational step for Factory Reset itself.
+        </p>
+        <ul>
+          <li>Use only for TAC-guided troubleshooting or approved maintenance.</li>
+          <li>Coordinate the access window and purpose before generating the challenge.</li>
+          <li>Do not share challenge or response strings outside the authorized support workflow.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>D-2. Login flow overview</h2>
+        <ol>
+          <li>Log in to the target device CLI.</li>
+          <li>Generate a shell-access challenge string on the device.</li>
+          <li>Send the generated challenge string to the Cisco TAC engineer.</li>
+          <li>Receive the matching response string from Cisco TAC.</li>
+          <li>Apply the response string on the device.</li>
+          <li>Run the system shell login command and confirm the warning prompt.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>D-3. Generate the challenge string</h2>
+        <p>
+          Generate a challenge with the requested authorization timeout. The timeout value is in minutes.
+          Use the access window agreed with TAC.
+        </p>
+        <pre><code>Router#request consent-token generate-challenge shell-access auth-timeout &lt;MINUTES&gt;</code></pre>
+        <div class="note">
+          <span class="label">Example:</span>
+          If TAC asks for a 900-minute window, use <code>auth-timeout 900</code>. The generated challenge string must be provided to TAC.
+        </div>
+      </section>
+
+      <section>
+        <h2>D-4. Apply the TAC response string</h2>
+        <p>
+          After TAC returns the response string for the challenge, apply it with the following command.
+          The response string is time-bound and tied to the generated challenge.
+        </p>
+        <pre><code>Router#request consent-token accept-response shell-access &lt;RESPONSE_STRING_FROM_TAC&gt;</code></pre>
+        <div class="warning">
+          <span class="label">Do not publish:</span>
+          The challenge and response strings are authorization material. Do not paste real values into public notes, tickets, or guides.
+        </div>
+      </section>
+
+      <section>
+        <h2>D-5. Enter system shell</h2>
+        <p>
+          Once the response is accepted, run the system shell command. When prompted, confirm only if the operation is approved.
+        </p>
+        <pre><code>Router#request platform software system shell</code></pre>
+        <pre><code>Activity within this shell can jeopardize the functioning of the system.
+Are you sure you want to continue? [y/n] y</code></pre>
+        <p>
+          After login, the device may display that shell access was granted and that the session is being logged.
+          Operate only within the commands and scope requested by TAC.
+        </p>
+      </section>
+
+      <section>
+        <h2>D-6. Logout and terminate authorization</h2>
+        <p>
+          Exit the shell when work is complete. If shell access is no longer needed, terminate the authorization state.
+          Authorization also expires automatically after the requested timeout.
+        </p>
+        <pre><code>[-f:/]$ exit
+Router#request consent-token terminate-auth</code></pre>
+        <div class="note">
+          <span class="label">Re-login:</span>
+          During the authorized time window, you can re-enter the shell with
+          <code>request platform software system shell</code>. After the window expires, generate a new challenge and repeat the TAC response process.
+        </div>
+      </section>
+
+      <section>
+        <h2>D-7. Operational cautions</h2>
+        <ul>
+          <li>System shell commands are outside normal IOS XE CLI operations and may affect system behavior.</li>
+          <li>Keep a console or out-of-band access path available when performing shell-level work.</li>
+          <li>Record the maintenance window, TAC case, purpose, operator, and commands executed.</li>
+          <li>Do not store real response strings, secrets, tokens, or customer data in this guide.</li>
+        </ul>
+      </section>
+    </div>
+
     <div id="page-reset-summary" class="page">
       <section>
         <h2>Reset Command Options Summary</h2>
@@ -1344,6 +1456,7 @@ Router#dir usbflash0:</code></pre>
           /^Router#terminal length 0\nRouter#more bootflash:ciscosdwan\.cfg/m,
           /^Router#show version\n/m,
           /^         --- System Configuration Dialog ---/m,
+          /^Activity within this shell can jeopardize/m,
           /^Enter enable secret:/m,
           /^\[0\] Go to the IOS command prompt/m,
           /^Enabling controller mode will erase/m,
