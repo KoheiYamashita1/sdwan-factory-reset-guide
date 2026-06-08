@@ -363,7 +363,6 @@
       <button type="button" class="page-btn active" data-target="page-basic">基本手順（factory reset all）</button>
       <button type="button" class="page-btn" data-target="page-os-restore">Secure Reset（factory reset all secure）</button>
       <button type="button" class="page-btn" data-target="page-advanced">Bootstrap ファイルが正しく読み込まれずに立ち上がってしまった場合</button>
-      <button type="button" class="page-btn" data-target="page-shell-access">Shellアクセス詳細</button>
       <button type="button" class="page-btn" data-target="page-reset-summary">リセットコマンドオプションサマリー</button>
     </nav>
 
@@ -1134,117 +1133,6 @@ Router#dir bootflash:</code></pre>
       </section>
     </div>
 
-
-    <div id="page-shell-access" class="page">
-      <section>
-        <h2>Shellアクセス詳細</h2>
-        <p class="meta">対象: IOS XE / IOS XE SD-WAN の Consent Token を使用した system shell login</p>
-
-        <div class="warning">
-          <span class="label">重要:</span>
-          System shell access は機器動作へ影響を与える可能性があるため、TAC 指示によるログ取得や調査など、
-          必要な場合に限定して使用してください。必ず適切な承認と作業計画のもとで実施します。
-        </div>
-
-        <div class="note">
-          <span class="label">参考:</span>
-          本ページは Cisco Community の以下の記事を要約したものです。
-          <a href="https://community.cisco.com/t5/tkb-%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AD%E3%83%B3%E3%82%B0-%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88/ios-xe-xe-sd-wan-system-shell-login-%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6/ta-p/4666712">IOS-XE/XE SD-WAN: system shell login について</a>
-        </div>
-      </section>
-
-      <section>
-        <h2>D-1. system shell access が必要となる場面</h2>
-        <p>
-          IOS XE / IOS XE SD-WAN 16.11 以降では、system shell login は Consent Token による認証で保護されています。
-          一般的には、Cisco TAC がログ取得やプラットフォームレベルの調査を行うために必要とする場合に使用します。
-          Factory Reset そのものの通常手順ではありません。
-        </p>
-        <ul>
-          <li>TAC 指示または承認済みメンテナンスの場合のみ使用します。</li>
-          <li>チャレンジ生成前に、作業目的とアクセス可能時間を TAC と合わせます。</li>
-          <li>チャレンジ文字列やレスポンス文字列は、承認されたサポートフロー以外へ共有しません。</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>D-2. ログイン手順概要</h2>
-        <ol>
-          <li>対象機器へ CLI でログインします。</li>
-          <li>機器上で shell-access 用のチャレンジ文字列を生成します。</li>
-          <li>生成されたチャレンジ文字列を Cisco TAC エンジニアへ連絡します。</li>
-          <li>Cisco TAC から対応するレスポンス文字列を受け取ります。</li>
-          <li>受信したレスポンス文字列を機器へ投入します。</li>
-          <li>system shell login コマンドを実行し、警告プロンプトを確認します。</li>
-        </ol>
-      </section>
-
-      <section>
-        <h2>D-3. チャレンジ文字列の生成</h2>
-        <p>
-          要求する認証有効時間を指定してチャレンジを生成します。時間は分単位です。
-          TAC と合意した作業時間に合わせて指定します。
-        </p>
-        <pre><code>Router#request consent-token generate-challenge shell-access auth-timeout &lt;MINUTES&gt;</code></pre>
-        <div class="note">
-          <span class="label">例:</span>
-          TAC から 900 分の作業枠を求められた場合は <code>auth-timeout 900</code> を使用します。生成されたチャレンジ文字列を TAC へ共有します。
-        </div>
-      </section>
-
-      <section>
-        <h2>D-4. TAC から受け取ったレスポンス文字列の投入</h2>
-        <p>
-          TAC からチャレンジに対応するレスポンス文字列を受け取ったら、以下のコマンドで投入します。
-          レスポンス文字列は生成したチャレンジと有効時間に紐づきます。
-        </p>
-        <pre><code>Router#request consent-token accept-response shell-access &lt;RESPONSE_STRING_FROM_TAC&gt;</code></pre>
-        <div class="warning">
-          <span class="label">公開禁止:</span>
-          チャレンジ文字列とレスポンス文字列は認可情報です。実値を公開資料、チケット、手順書に貼り付けないでください。
-        </div>
-      </section>
-
-      <section>
-        <h2>D-5. system shell へのログイン</h2>
-        <p>
-          レスポンスが受け付けられた後、system shell コマンドを実行します。警告が表示された場合、作業が承認済みであることを確認して続行します。
-        </p>
-        <pre><code>Router#request platform software system shell</code></pre>
-        <pre><code>Activity within this shell can jeopardize the functioning of the system.
-Are you sure you want to continue? [y/n] y</code></pre>
-        <p>
-          ログイン後、shell access が許可されたことやセッションログの保存先が表示される場合があります。
-          TAC から依頼された範囲のコマンドのみ実行してください。
-        </p>
-      </section>
-
-      <section>
-        <h2>D-6. logout と認可状態の終了</h2>
-        <p>
-          作業が完了したら shell から logout します。system shell access が不要になった場合は認可状態を終了します。
-          認可状態は指定した timeout 経過後にも自動終了します。
-        </p>
-        <pre><code>[-f:/]$ exit
-Router#request consent-token terminate-auth</code></pre>
-        <div class="note">
-          <span class="label">再ログイン:</span>
-          認可時間内であれば <code>request platform software system shell</code> で再度 shell へ入ることができます。
-          有効時間を過ぎた場合は、チャレンジ生成から再実施します。
-        </div>
-      </section>
-
-      <section>
-        <h2>D-7. 作業時の注意事項</h2>
-        <ul>
-          <li>System shell は通常の IOS XE CLI 操作の外側にあり、機器動作へ影響する可能性があります。</li>
-          <li>shell レベルの作業時は、コンソールまたは Out-of-Band のアクセス経路を確保してください。</li>
-          <li>作業時間、TAC ケース、目的、作業者、実行コマンドを記録してください。</li>
-          <li>実際のレスポンス文字列、secret、token、顧客データを本手順書へ保存しないでください。</li>
-        </ul>
-      </section>
-    </div>
-
     <div id="page-reset-summary" class="page">
       <section>
         <h2>リセットコマンドオプションサマリー</h2>
@@ -1462,7 +1350,6 @@ Router#dir usbflash0:</code></pre>
           /^Router#terminal length 0\nRouter#more bootflash:ciscosdwan\.cfg/m,
           /^Router#show version\n/m,
           /^         --- System Configuration Dialog ---/m,
-          /^Activity within this shell can jeopardize/m,
           /^Enter enable secret:/m,
           /^\[0\] Go to the IOS command prompt/m,
           /^Enabling controller mode will erase/m,
