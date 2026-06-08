@@ -387,18 +387,6 @@
       <table>
         <tbody>
           <tr>
-            <th>対象機器</th>
-            <td><span class="placeholder">&lt;対象ルータ名 / 機種名&gt;</span></td>
-          </tr>
-          <tr>
-            <th>作業者</th>
-            <td><span class="placeholder">&lt;作業者名&gt;</span></td>
-          </tr>
-          <tr>
-            <th>作業日時</th>
-            <td><span class="placeholder">&lt;YYYY-MM-DD HH:MM&gt;</span></td>
-          </tr>
-          <tr>
             <th>コンソール接続</th>
             <td>Factory Reset 後に操作できるよう、コンソール接続を確保しておく。</td>
           </tr>
@@ -499,6 +487,13 @@ username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_
 --===============&lt;BOUNDARY_ID&gt;==--
 }</code></pre>
 
+      <div class="note">
+        <span class="label">機種・構成固有の注意（ISR1100-4G / 6G）:</span>
+        一部の構成では、<code>interface BDI1</code> などのインターフェース配下に設定した <code>ip helper-address</code> が、
+        Bootstrap ファイルや <code>show sdwan running-config</code> に反映されない場合がある。
+        この場合は Bootstrap ファイルに頼らず、保存しておいたローカルの running-config（local-config）を
+        コピー＆ペーストで投入する方が確実である。
+      </div>
     </section>
 
     <section id="basic-factory-reset">
@@ -550,6 +545,13 @@ Are you sure you want to continue? [confirm]</code></pre>
       </div>
       <pre><code>rommon &gt; confreg 0x2102
 rommon &gt; boot</code></pre>
+
+      <div class="note">
+        <span class="label">ISR1100-4G / 6G の注意:</span>
+        ISR1100-4G / 6G では、ROMMON 操作時に ROMMON プロンプトを利用できるようにするため、
+        コンソールのボーレートを一時的に <code>115200</code> へ変更する必要がある場合がある。
+        ルーター起動後は、コンソールのボーレートを元の値へ戻すこと。
+      </div>
     </section>
 
     <section id="basic-after-reset">
@@ -1053,6 +1055,14 @@ Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
           <span class="label">禁止事項:</span>
           Factory Reset 中は電源断、USB 抜去、強制再起動、コンソール入力による割り込みを行わないこと。
           完了まで 30分から3時間程度かかる場合がある。
+        </div>
+
+        <div class="note">
+          <span class="label">ISR1100-4G / 6G の注意:</span>
+          <code>factory reset all secure</code>（3-pass / 7-pass）では bootflash がファイルシステムごと消去され参照できない状態になるため、
+          TFTP または USB からの起動が必須となる（ラボでは TFTP で検証）。
+          基本手順と同様に、ROMMON 時にコンソールのボーレートを一時的に <code>115200</code> へ変更する必要がある場合がある。
+          設定方法はその他は同じである。
         </div>
       </section>
 

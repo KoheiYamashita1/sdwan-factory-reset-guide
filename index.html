@@ -387,18 +387,6 @@
       <table>
         <tbody>
           <tr>
-            <th>Target Device</th>
-            <td><span class="placeholder">&lt;Router name / model&gt;</span></td>
-          </tr>
-          <tr>
-            <th>Operator</th>
-            <td><span class="placeholder">&lt;Operator name&gt;</span></td>
-          </tr>
-          <tr>
-            <th>Maintenance Window</th>
-            <td><span class="placeholder">&lt;YYYY-MM-DD HH:MM&gt;</span></td>
-          </tr>
-          <tr>
             <th>Console Access</th>
             <td>Ensure console access is available so the router can be operated after Factory Reset.</td>
           </tr>
@@ -499,6 +487,13 @@ username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_
 --===============&lt;BOUNDARY_ID&gt;==--
 }</code></pre>
 
+      <div class="note">
+        <span class="label">Model / config-specific note (ISR1100-4G / 6G):</span>
+        In some deployments, an <code>ip helper-address</code> configured under an interface such as <code>interface BDI1</code>
+        is not reflected in the Bootstrap file or in <code>show sdwan running-config</code>.
+        When this occurs, do not rely on the Bootstrap file. Instead, copy and paste the saved local running configuration
+        (local-config) to recreate the device configuration reliably.
+      </div>
     </section>
 
     <section id="basic-factory-reset">
@@ -550,6 +545,12 @@ Are you sure you want to continue? [confirm]</code></pre>
       </div>
       <pre><code>rommon &gt; confreg 0x2102
 rommon &gt; boot</code></pre>
+
+      <div class="note">
+        <span class="label">ISR1100-4G / 6G note:</span>
+        On the ISR1100-4G / 6G, when operating in ROMMON you may need to temporarily change the console baud rate to
+        <code>115200</code> before the ROMMON prompt is usable. Restore the console to its original baud rate after the router boots.
+      </div>
     </section>
 
     <section id="basic-after-reset">
@@ -1048,6 +1049,13 @@ Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
           <span class="label">Do not:</span>
           During Factory Reset, do not power off the device, remove the USB media, force reboot, or interrupt the operation from the console.
           Completion can take approximately 30 minutes to 3 hours.
+        </div>
+
+        <div class="note">
+          <span class="label">ISR1100-4G / 6G note:</span>
+          With <code>factory reset all secure</code> (3-pass / 7-pass), the bootflash filesystem itself is wiped and can no longer be
+          referenced, so booting from TFTP or USB is mandatory (verified with TFTP in a lab). As with the basic procedure, in ROMMON you
+          may need to temporarily set the console baud rate to <code>115200</code>; the configuration method is otherwise the same.
         </div>
       </section>
 
