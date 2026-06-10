@@ -360,25 +360,31 @@
     <p class="language-switch">Japanese backup: <a href="ja.html">Japanese version</a></p>
 
     <nav class="page-nav">
-      <button type="button" class="page-btn active" data-target="page-basic">Basic Procedure (factory reset all)</button>
-      <button type="button" class="page-btn" data-target="page-os-restore">Secure Reset (factory reset all secure)</button>
+      <button type="button" class="page-btn active" data-target="page-secure">Main Procedure (factory reset all secure)</button>
+      <button type="button" class="page-btn" data-target="page-basic-optional">Optional: Basic Reset (factory reset all)</button>
       <button type="button" class="page-btn" data-target="page-advanced">If the Bootstrap file is not loaded correctly</button>
       <button type="button" class="page-btn" data-target="page-reset-summary">Reset Command Options Summary</button>
     </nav>
 
-    <div id="page-basic" class="page active">
+    <div id="page-secure" class="page active">
     <section>
       <h2>1. Purpose</h2>
       <p>
-        Factory reset a Cisco SD-WAN router, then bring the router back up by using the Bootstrap file
-        <code>bootflash:ciscosdwan.cfg</code>.
-        This procedure starts while the router is operating in SD-WAN Controller Mode and covers
-        executing the Factory Reset command directly from the CLI.
+        Securely factory reset a Cisco SD-WAN router with <code>factory reset all secure</code>, restore the OS image,
+        and bring the router back up by using the Bootstrap file <code>bootflash:ciscosdwan.cfg</code>.
+        This is the main procedure. It starts while the router is operating in SD-WAN Controller Mode and covers
+        executing the secure Factory Reset directly from the CLI, recovering the OS image, and re-establishing SD-WAN.
       </p>
       <div class="warning">
         <span class="label">Important:</span>
-        Factory Reset is irreversible. Configuration, user information, licenses, OBFL logs, ROMMON variables,
-        user data, startup configuration, and related data may be deleted. Always back up the Bootstrap content and required configuration details before proceeding.
+        <code>factory reset all secure</code> is irreversible and additionally wipes the bootflash filesystem (including the OS image).
+        Configuration, user information, licenses, OBFL logs, ROMMON variables, user data, and startup configuration are deleted.
+        Always back up the Bootstrap content and required configuration, and prepare a verified OS image on USB or TFTP before proceeding.
+      </div>
+      <div class="note">
+        <span class="label">Looking for the non-secure reset?</span>
+        If a full secure erase is not required and the OS image can be retained, use the
+        <strong>Optional: Basic Reset (factory reset all)</strong> page instead.
       </div>
     </section>
 
@@ -497,14 +503,48 @@ username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_
     </section>
 
     <section id="basic-factory-reset">
-      <h2>6. Execute Factory Reset</h2>
+      <h2>6. Prepare the OS Image for Recovery (USB or TFTP)</h2>
       <p>
-        While the router is operating in SD-WAN Controller Mode, execute Factory Reset directly with the following command.
+        Because <code>factory reset all secure</code> wipes the bootflash filesystem, the OS image must be restored after the reset.
+        Before running the reset, prepare an OS image obtained from the official Cisco download page on USB or a reachable TFTP server.
+        Do not reuse the OS image left on the device bootflash.
       </p>
-      <button type="button" class="jump-btn" data-target="page-os-restore">
-        Secure Reset (<code>factory reset all secure</code>) requires OS image recovery. Go to the dedicated recovery procedure
-      </button>
-      <pre><code>factory reset all</code></pre>
+
+      <pre><code>Router#show version | include System image
+Router#show boot
+Router#dir bootflash:
+Router#dir usbflash0:</code></pre>
+
+      <ol>
+        <li>Confirm the current OS version and the official OS image filename to use for recovery.</li>
+        <li>Download the matching IOS XE / SD-WAN image from the official Cisco download page to the work computer.</li>
+        <li>Verify the downloaded file checksum against Cisco's published value.</li>
+        <li>Place the verified image on USB (root directory) or on a reachable TFTP server.</li>
+        <li>Confirm that the device can read the image from USB.</li>
+      </ol>
+
+      <pre><code>Router#dir usbflash0:
+Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+      <div class="note">
+        <span class="label">Replace as needed:</span>
+        The examples use <code>&lt;IOSXE_IMAGE.bin&gt;</code> as the OS image filename and <code>usbflash0:</code> as the USB device name.
+        The USB device name may be <code>usbflash1:</code> or another name depending on the model and slot. Adjust to match the actual device.
+      </div>
+
+      <div class="warning">
+        <span class="label">Required:</span>
+        Do not start the secure Factory Reset until the OS image checksum is verified and the device can read it from USB or TFTP.
+      </div>
+    </section>
+
+    <section>
+      <h2>7. Execute factory reset all secure</h2>
+      <p>
+        While the router is operating in SD-WAN Controller Mode, execute the secure Factory Reset with the following command.
+        Review the deletion scope and impact at each confirmation prompt before continuing.
+      </p>
+      <pre><code>Router#factory reset all secure</code></pre>
 
       <p>Several confirmation prompts are displayed. Review the content and press Enter to continue.</p>
       <pre><code>The factory reset operation is irreversible for all operations. Are you sure? [confirm]
@@ -520,41 +560,69 @@ The following will be deleted as a part of factory reset:
 The system will reload to perform factory reset.
 This operation can take anywhere between 30 minutes to 3 hours
 DO NOT UNPLUG THE POWER OR INTERRUPT THE OPERATION
-Are you sure you want to continue? [confirm]
-
-Factory reset will take a backup of the boot image if the system is currently booted from an image stored locally.
-If the current boot image is a remote image or stored on a usb/nim-ssd, please take a backup of the image before executing this command.
 Are you sure you want to continue? [confirm]</code></pre>
-
-      <h3>Example Log After Execution</h3>
-      <pre><code>*May 20 03:15:59.159: SED security lock disabled
-*May 20 03:16:00.116: %SYS-5-RELOAD: Reload requested by Exec. Reload Reason: Factory Reset</code></pre>
 
       <div class="warning">
         <span class="label">Do not:</span>
-        Factory Reset can take approximately 30 minutes to 3 hours. Do not unplug power,
-        force reboot, or interrupt the operation. Do not enter console input until
-        the Factory Reset operation and reboot have fully completed.
+        During Factory Reset, do not power off the device, remove the USB media, force reboot, or interrupt the operation from the console.
+        Completion can take approximately 30 minutes to 3 hours.
       </div>
-
-      <h3>Optional: If the Router Boots into ROMMON Mode</h3>
-      <div class="note">
-        <span class="label">Note:</span>
-        If the router boots into ROMMON mode after Factory Reset, boot the router again with the following commands.
-        Whether this optional step is required depends on the chassis model.
-      </div>
-      <pre><code>rommon &gt; confreg 0x2102
-rommon &gt; boot</code></pre>
 
       <div class="note">
         <span class="label">ISR1100-4G / 6G note:</span>
-        On the ISR1100-4G / 6G, when operating in ROMMON you may need to temporarily change the console baud rate to
-        <code>115200</code> before the ROMMON prompt is usable. Restore the console to its original baud rate after the router boots.
+        With <code>factory reset all secure</code> (3-pass / 7-pass), the bootflash filesystem itself is wiped and can no longer be
+        referenced, so booting from TFTP or USB is mandatory (verified with TFTP in a lab). In ROMMON you may need to temporarily set
+        the console baud rate to <code>115200</code>; the configuration method is otherwise the same.
+      </div>
+    </section>
+
+    <section>
+      <h2>8. Boot from USB/TFTP and Restore the OS Image</h2>
+      <p>
+        After the secure reset, no bootable OS image exists on bootflash, so the router boots into ROMMON.
+        Boot temporarily from the OS image on USB (or TFTP), respond to the initial prompts (see step 9) to reach the IOS command prompt,
+        then copy the image back to bootflash and set the BOOT variable.
+      </p>
+
+      <pre><code>rommon &gt; dir usbflash0:
+rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+      <div class="note">
+        <span class="label">ISR1100-4G / 6G note:</span>
+        On the ISR1100-4G / 6G, you may need to temporarily change the console baud rate to <code>115200</code> before the ROMMON prompt is usable.
+        Restore the original baud rate after the router boots. If the USB device name differs, check with <code>dir usbflash1:</code>.
+        TFTP boot (for example <code>boot tftp://&lt;TFTP_SERVER&gt;/&lt;IOSXE_IMAGE.bin&gt;</code>) can be used instead of USB.
+      </div>
+
+      <h3>Copy the OS Image to bootflash</h3>
+      <pre><code>Router#dir usbflash0:
+Router#dir bootflash:
+Router#copy usbflash0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
+Router#verify /sha512 bootflash:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+      <h3>Set the BOOT Variable and Verify</h3>
+      <pre><code>Router#configure terminal
+Router(config)#no boot system
+Router(config)#boot system bootflash:&lt;IOSXE_IMAGE.bin&gt;
+Router(config)#config-register 0x2102
+Router(config)#end
+Router#write memory
+Router#show boot</code></pre>
+
+      <ul>
+        <li>The System image in <code>show version</code> points to <code>bootflash:&lt;IOSXE_IMAGE.bin&gt;</code>.</li>
+        <li><code>show boot</code> shows that the BOOT variable points to the OS image on bootflash.</li>
+        <li>The router boots successfully even with USB removed.</li>
+      </ul>
+
+      <div class="note">
+        <span class="label">Note:</span>
+        Do not save the SD-WAN configuration to NVRAM yet. Continue to recreate the Bootstrap file and enable Controller Mode in the next steps.
       </div>
     </section>
 
     <section id="basic-after-reset">
-      <h2>7. Respond to Initial Prompts After Factory Reset</h2>
+      <h2>9. Respond to Initial Prompts After Factory Reset</h2>
       <p>
         After executing Factory Reset, wait several hours for completion. When the following
         <code>System Configuration Dialog</code> appears, do not enter the initial configuration dialog.
@@ -602,7 +670,7 @@ Enter your selection [2]: 0</code></pre>
     </section>
 
     <section>
-      <h2>8. Recreate the Bootstrap File</h2>
+      <h2>10. Recreate the Bootstrap File</h2>
       <p>
         After reaching the IOS command prompt, start <code>tclsh</code> and recreate the prepared Bootstrap content as
         <code>bootflash:ciscosdwan.cfg</code>.
@@ -695,7 +763,7 @@ system
     </section>
 
     <section>
-      <h2>9. Enable Controller Mode</h2>
+      <h2>11. Enable Controller Mode</h2>
       <p>
         After recreating and verifying the Bootstrap file, enable Controller Mode with the following command.
       </p>
@@ -732,7 +800,7 @@ Do you wish to proceed with reload anyway[confirm]</code></pre>
     </section>
 
     <section>
-      <h2>10. Verify SD-WAN Health After Reboot</h2>
+      <h2>12. Verify SD-WAN Health After Reboot</h2>
       <p>
         After the reboot following Controller Mode enablement completes, confirm that the SD-WAN configuration was loaded from the Bootstrap file
         and that the router can connect to the SD-WAN controllers.
@@ -786,11 +854,11 @@ Do you wish to proceed with reload anyway[confirm]</code></pre>
         <div class="warning">
           <span class="label">Purpose of this page:</span>
           When using advanced features such as <strong>Firewall</strong> or <strong>Cisco ThousandEyes</strong>,
-          configuration may not be loaded correctly when booting with the Bootstrap file (<code>bootflash:ciscosdwan.cfg</code>) from the basic procedure.
+          configuration may not be loaded correctly when booting with the Bootstrap file (<code>bootflash:ciscosdwan.cfg</code>) from the main procedure.
           Use this workaround procedure for those deployments.
         </div>
 
-        <h3>Difference from the Basic Procedure</h3>
+        <h3>Difference from the Main Procedure</h3>
         <p>
           This procedure does not rely on loading configuration from the Bootstrap file (<code>bootflash:ciscosdwan.cfg</code>).
           Instead, perform CLI configuration in Controller Mode and manually enter the minimum required settings
@@ -806,7 +874,7 @@ Do you wish to proceed with reload anyway[confirm]</code></pre>
           <span class="label">Starting point:</span>
           This procedure starts from the state where <strong>Controller Mode has already been enabled (<code>controller-mode enable</code>)
           and the router has booted in Controller Mode without correctly loading the Bootstrap configuration</strong>.
-          Factory Reset execution, initial prompt handling, and Controller Mode enablement are assumed to have already been completed according to the basic procedure.
+          Factory Reset execution, initial prompt handling, and Controller Mode enablement are assumed to have already been completed according to the main procedure.
         </div>
 
         <div class="note">
@@ -962,176 +1030,97 @@ show ip route vrf <span class="placeholder">&lt;XX&gt;</span></code></pre>
       </section>
     </div>
 
-    <div id="page-os-restore" class="page">
+    <div id="page-basic-optional" class="page">
       <section>
-        <h2>Secure Reset Procedure with OS Image Recovery</h2>
-        <p class="meta">Scope: Use this when <code>factory reset all secure</code> requires restoring the OS image from USB.</p>
+        <h2>Optional: Basic Reset (factory reset all)</h2>
+        <p class="meta">Scope: Use when a full secure erase is not required and the OS image can be retained.</p>
+
+        <div class="note">
+          <span class="label">When to use this option:</span>
+          The main procedure uses <code>factory reset all secure</code>, which wipes the bootflash filesystem including the OS image.
+          When a full secure erase is not required (for example, device reuse or relocation), you can use <code>factory reset all</code> instead.
+          In that case <code>packages.conf</code> and the OS image remain, so the USB/TFTP OS image recovery steps are not needed.
+        </div>
 
         <div class="warning">
-          <span class="label">Purpose of this page:</span>
-          This procedure uses <code>factory reset all secure</code> as the Factory Reset command.
-          This command may delete not only configuration and user data, but also OS image files on bootflash.
-          Therefore, place an OS image downloaded from the official Cisco download page onto USB before the work,
-          then copy the OS image back from USB after Factory Reset.
-        </div>
-
-        <div class="note">
-          <span class="label">Workflow:</span>
-          <ol>
-            <li>Confirm the current OS version and the official OS image filename to use for recovery.</li>
-            <li>Download the OS image from the official Cisco download page and place it on USB.</li>
-            <li>Run <code>factory reset all secure</code>.</li>
-            <li>Boot from the OS image on USB and copy the OS image back to bootflash.</li>
-            <li>Set the BOOT variable and confirm that the router boots from the OS image on bootflash after reload.</li>
-          </ol>
+          <span class="label">Important:</span>
+          <code>factory reset all</code> is still irreversible for configuration, user data, licenses, OBFL logs, ROMMON variables, and startup config.
+          Back up the Bootstrap content and required configuration before proceeding.
         </div>
       </section>
 
       <section>
-        <h2>B-1. Pre-check and USB Preparation</h2>
+        <h2>Difference from the Main Procedure</h2>
         <p>
-          Before Factory Reset, confirm the currently running OS version and the OS image filename to use for recovery.
-          Do not use an OS image remaining on bootflash as the source.
-          Prepare USB media in a format recognized by the router and confirm that it has enough capacity.
-          The USB device name may be <code>usbflash0:</code>, <code>usbflash1:</code>, or another name depending on the model and slot.
+          The preparation (Bootstrap creation and TCLSH preparation) and the post-reset steps
+          (initial prompts, Bootstrap recreation, Controller Mode enablement, and SD-WAN verification) are identical to the main procedure.
+          Only the reset command and the OS image handling differ.
         </p>
-
-        <pre><code>Router#show version | include System image
-Router#show boot
-Router#dir bootflash:
-Router#dir usbflash0:</code></pre>
-
-        <div class="note">
-          <span class="label">Replace as needed:</span>
-          The examples below use <code>&lt;IOSXE_IMAGE.bin&gt;</code> as the OS image filename and
-          <code>usbflash0:</code> as the USB device name.
-          Adjust these values to match the actual device output.
-        </div>
-      </section>
-
-      <section>
-        <h2>B-2. Download the OS Image from Cisco and Place It on USB</h2>
-        <p>
-          Do not use the OS image remaining on the router bootflash, because it may be affected by the pre-reset state or file corruption.
-          Download the OS image that matches the target model and planned version from the official Cisco download page
-          to the work computer, then place it on USB.
-        </p>
-
-        <ol>
-          <li>Access the official Cisco download page and download the IOS XE / SD-WAN image for the target model.</li>
-          <li>Record the checksum value shown on the download page.</li>
-          <li>Verify the checksum of the downloaded file on the work computer and confirm that it matches Cisco's published value.</li>
-          <li>Copy the verified OS image file to the root directory of the USB media.</li>
-          <li>Insert the USB media into the router and confirm that the router can see the file.</li>
-        </ol>
-
-        <pre><code>Router#dir usbflash0:
-Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
-
-        <div class="warning">
-          <span class="label">Required:</span>
-          After <code>factory reset all secure</code>, assume that the OS image on bootflash is lost.
-          Do not start Factory Reset until the checksum of the OS image downloaded from Cisco is verified,
-          the image is placed on USB, and the router can read the file from USB.
-        </div>
-      </section>
-
-      <section>
-        <h2>B-3. Execute Factory Reset</h2>
-        <p>
-          After placing the Cisco-downloaded OS image on USB and confirming that it can be read, execute Factory Reset with the following command.
-          If confirmation prompts are displayed, review the deletion scope and impact before continuing.
-        </p>
-
-        <pre><code>Router#factory reset all secure</code></pre>
-
-        <div class="warning">
-          <span class="label">Do not:</span>
-          During Factory Reset, do not power off the device, remove the USB media, force reboot, or interrupt the operation from the console.
-          Completion can take approximately 30 minutes to 3 hours.
-        </div>
-
-        <div class="note">
-          <span class="label">ISR1100-4G / 6G note:</span>
-          With <code>factory reset all secure</code> (3-pass / 7-pass), the bootflash filesystem itself is wiped and can no longer be
-          referenced, so booting from TFTP or USB is mandatory (verified with TFTP in a lab). As with the basic procedure, in ROMMON you
-          may need to temporarily set the console baud rate to <code>115200</code>; the configuration method is otherwise the same.
-        </div>
-      </section>
-
-      <section>
-        <h2>B-4. Boot from the OS Image on USB</h2>
-        <p>
-          After Factory Reset, if no bootable OS image exists on bootflash, the router boots into ROMMON.
-          Confirm that USB is recognized, then temporarily boot from the OS image on USB.
-        </p>
-
-        <pre><code>rommon &gt; dir usbflash0:
-rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
-
-        <div class="note">
-          <span class="label">Note:</span>
-          If the USB device name differs, check recognition with commands such as <code>dir usbflash1:</code>.
-          If the router cannot boot from USB, verify the USB format, slot, image filename, and that the OS image matches the target model.
-        </div>
-      </section>
-
-      <section>
-        <h2>B-5. Copy the OS Image to bootflash</h2>
-        <p>
-          After successfully booting from the OS image on USB, respond to the initial prompts and reach the IOS command prompt.
-          Then copy the OS image file from USB back to bootflash.
-        </p>
-
-        <pre><code>Router#dir usbflash0:
-Router#dir bootflash:
-Router#copy usbflash0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
-Router#dir bootflash:
-Router#verify /sha512 bootflash:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
-
-        <div class="note">
-          <span class="label">Capacity check:</span>
-          Before copying, check free space with <code>dir bootflash:</code>.
-          If capacity is insufficient, check for unnecessary files and free space according to the maintenance procedure.
-        </div>
-      </section>
-
-      <section>
-        <h2>B-6. Set the BOOT Variable and Verify Boot</h2>
-        <p>
-          After restoring the OS image to bootflash, set the BOOT variable so future boots use the OS image on bootflash.
-          Save the configuration, reload, and confirm that the router can boot without USB.
-        </p>
-
-        <pre><code>Router#configure terminal
-Router(config)#no boot system
-Router(config)#boot system bootflash:&lt;IOSXE_IMAGE.bin&gt;
-Router(config)#config-register 0x2102
-Router(config)#end
-Router#write memory
-Router#show boot
-Router#reload</code></pre>
-
-        <h3>Verification After Reload</h3>
-        <pre><code>Router#show version | include System image
-Router#show boot
-Router#dir bootflash:</code></pre>
-
         <ul>
-          <li>The System image in <code>show version</code> points to <code>bootflash:&lt;IOSXE_IMAGE.bin&gt;</code>.</li>
-          <li><code>show boot</code> shows that the BOOT variable points to the OS image on bootflash.</li>
-          <li>The router boots successfully after reload even with USB removed.</li>
+          <li>Reset command: <code>factory reset all</code> (instead of <code>factory reset all secure</code>).</li>
+          <li>OS image: retained on bootflash, so USB/TFTP OS recovery is not required.</li>
+          <li>Boot after reset: follows the config-register value (does not always fall back to ROMMON).</li>
         </ul>
       </section>
 
       <section>
-        <h2>B-7. Continue the Recovery Procedure</h2>
+        <h2>Execute factory reset all</h2>
         <p>
-          After recovering the OS image and confirming successful boot from bootflash, return to the basic procedure from
-          <strong>Respond to Initial Prompts After Factory Reset</strong> onward, then recreate the Bootstrap file, enable Controller Mode, and verify SD-WAN health.
+          While the router is operating in SD-WAN Controller Mode, execute Factory Reset directly with the following command.
         </p>
+        <pre><code>factory reset all</code></pre>
 
-        <button type="button" class="jump-btn" data-target="page-basic" data-scroll-target="basic-after-reset">Return to Basic Procedure Step 7</button>
+        <p>Several confirmation prompts are displayed. Review the content and press Enter to continue.</p>
+        <pre><code>The factory reset operation is irreversible for all operations. Are you sure? [confirm]
+
+The following will be deleted as a part of factory reset:
+ 1: All writable file systems and personal data
+ 2: OBFL logs
+ 3: Licenses
+ 4: Userdata and Startup config
+ 5: Rommon variables
+ 6: User Credentials
+
+The system will reload to perform factory reset.
+This operation can take anywhere between 30 minutes to 3 hours
+DO NOT UNPLUG THE POWER OR INTERRUPT THE OPERATION
+Are you sure you want to continue? [confirm]
+
+Factory reset will take a backup of the boot image if the system is currently booted from an image stored locally.
+If the current boot image is a remote image or stored on a usb/nim-ssd, please take a backup of the image before executing this command.
+Are you sure you want to continue? [confirm]</code></pre>
+
+        <div class="warning">
+          <span class="label">Do not:</span>
+          Factory Reset can take approximately 30 minutes to 3 hours. Do not unplug power, force reboot, or interrupt the operation
+          until the Factory Reset operation and reboot have fully completed.
+        </div>
+
+        <h3>Optional: If the Router Boots into ROMMON Mode</h3>
+        <div class="note">
+          <span class="label">Note:</span>
+          If the router boots into ROMMON mode after Factory Reset, boot it again with the following commands.
+          Whether this is required depends on the chassis model.
+        </div>
+        <pre><code>rommon &gt; confreg 0x2102
+rommon &gt; boot</code></pre>
+
+        <div class="note">
+          <span class="label">ISR1100-4G / 6G note:</span>
+          On the ISR1100-4G / 6G, in ROMMON you may need to temporarily change the console baud rate to <code>115200</code>.
+          Restore the original baud rate after the router boots.
+        </div>
+      </section>
+
+      <section>
+        <h2>Continue with the Main Procedure</h2>
+        <p>
+          After the reset completes, the remaining steps are the same as the main procedure:
+          respond to the initial prompts, recreate the Bootstrap file, enable Controller Mode, and verify SD-WAN health.
+        </p>
+        <button type="button" class="jump-btn" data-target="page-secure" data-scroll-target="basic-after-reset">
+          Continue with the main procedure (initial prompts onward)
+        </button>
       </section>
     </div>
 
@@ -1148,8 +1137,8 @@ Router#dir bootflash:</code></pre>
 
         <div class="warning">
           <span class="label">Context:</span>
-          In this guide, <code>factory reset all</code> is treated as the basic procedure, and
-          <code>factory reset all secure</code> is treated as the procedure that requires OS image recovery.
+          In this guide, <code>factory reset all secure</code> is treated as the main procedure, and
+          <code>factory reset all</code> is treated as an optional procedure that retains the OS image.
           The tables below are reference information for comparing the deletion scope of related <code>factory reset</code> commands.
         </div>
       </section>

@@ -360,25 +360,31 @@
     <p class="language-switch">English: <a href="index.html">Main page</a></p>
 
     <nav class="page-nav">
-      <button type="button" class="page-btn active" data-target="page-basic">基本手順（factory reset all）</button>
-      <button type="button" class="page-btn" data-target="page-os-restore">Secure Reset（factory reset all secure）</button>
+      <button type="button" class="page-btn active" data-target="page-secure">メイン手順（factory reset all secure）</button>
+      <button type="button" class="page-btn" data-target="page-basic-optional">オプション: 基本リセット（factory reset all）</button>
       <button type="button" class="page-btn" data-target="page-advanced">Bootstrap ファイルが正しく読み込まれずに立ち上がってしまった場合</button>
       <button type="button" class="page-btn" data-target="page-reset-summary">リセットコマンドオプションサマリー</button>
     </nav>
 
-    <div id="page-basic" class="page active">
+    <div id="page-secure" class="page active">
     <section>
       <h2>1. 目的</h2>
       <p>
-        Cisco SD-WAN ルータを Factory Reset し、リセット後に Bootstrap ファイル
-        <code>bootflash:ciscosdwan.cfg</code> から再度ルータを立ち上げ直す。
-        本手順は、ルータが SD-WAN の Controller Mode で動作している状態から開始し、
-        CLI で Factory Reset コマンドを直接実行する流れを対象とする。
+        Cisco SD-WAN ルータを <code>factory reset all secure</code> でセキュアに Factory Reset し、OS イメージを復旧したうえで、
+        リセット後に Bootstrap ファイル <code>bootflash:ciscosdwan.cfg</code> から再度ルータを立ち上げ直す。
+        本手順はメイン手順であり、ルータが SD-WAN の Controller Mode で動作している状態から開始し、
+        CLI でのセキュア Factory Reset 実行、OS イメージ復旧、SD-WAN 再確立までを対象とする。
       </p>
       <div class="warning">
         <span class="label">重要:</span>
-        Factory Reset は不可逆操作であり、設定、ユーザ情報、ライセンス、OBFLログ、ROMMON変数、
-        ユーザデータ、起動設定などが削除される。実行前に必ず Bootstrap 内容と必要な設定情報を退避すること。
+        <code>factory reset all secure</code> は不可逆操作であり、加えて bootflash のファイルシステム（OS イメージを含む）も消去される。
+        設定、ユーザ情報、ライセンス、OBFLログ、ROMMON変数、ユーザデータ、起動設定などが削除される。
+        実行前に必ず Bootstrap 内容と必要な設定情報を退避し、検証済みの OS イメージを USB または TFTP に準備しておくこと。
+      </div>
+      <div class="note">
+        <span class="label">セキュアでない通常のリセットを行う場合:</span>
+        完全消去が不要で OS イメージを残せる場合は、
+        <strong>オプション: 基本リセット（factory reset all）</strong>ページを使用する。
       </div>
     </section>
 
@@ -497,14 +503,48 @@ username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_
     </section>
 
     <section id="basic-factory-reset">
-      <h2>6. Factory Reset の実行</h2>
+      <h2>6. 復旧用 OS イメージの準備（USB または TFTP）</h2>
       <p>
-        SD-WAN の Controller Mode で動作している状態から、以下のコマンドで Factory Reset を直接実行する。
+        <code>factory reset all secure</code> は bootflash のファイルシステムごと消去するため、リセット後に OS イメージを復旧する必要がある。
+        リセット実行前に、Cisco 公式ダウンロードページから取得した OS イメージを USB または到達可能な TFTP サーバーへ準備しておく。
+        機器の bootflash に残っている OS イメージは流用しない。
       </p>
-      <button type="button" class="jump-btn" data-target="page-os-restore">
-        Secure Reset（<code>factory reset all secure</code>）を実行する場合は、OS イメージ復旧手順へ進む
-      </button>
-      <pre><code>factory reset all</code></pre>
+
+      <pre><code>Router#show version | include System image
+Router#show boot
+Router#dir bootflash:
+Router#dir usbflash0:</code></pre>
+
+      <ol>
+        <li>現在の OS バージョンと、復旧に使用する公式 OS イメージファイル名を確認する。</li>
+        <li>対象機種に対応する IOS XE / SD-WAN イメージを Cisco 公式ダウンロードページから作業端末へダウンロードする。</li>
+        <li>ダウンロードしたファイルのチェックサムを、Cisco 掲載値と一致するか確認する。</li>
+        <li>確認済みイメージを USB のルートディレクトリ、または到達可能な TFTP サーバーへ配置する。</li>
+        <li>機器から USB 上のイメージが読み出せることを確認する。</li>
+      </ol>
+
+      <pre><code>Router#dir usbflash0:
+Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+      <div class="note">
+        <span class="label">置き換え:</span>
+        例では OS イメージファイル名を <code>&lt;IOSXE_IMAGE.bin&gt;</code>、USB のデバイス名を <code>usbflash0:</code> として記載する。
+        USB のデバイス名は機種や挿入スロットにより <code>usbflash1:</code> などになる場合がある。実機に合わせて読み替えること。
+      </div>
+
+      <div class="warning">
+        <span class="label">必須:</span>
+        OS イメージのチェックサム確認と、USB または TFTP から読み出せることの確認が完了するまで、セキュア Factory Reset を開始しないこと。
+      </div>
+    </section>
+
+    <section>
+      <h2>7. factory reset all secure の実行</h2>
+      <p>
+        SD-WAN の Controller Mode で動作している状態から、以下のコマンドでセキュア Factory Reset を実行する。
+        各確認プロンプトで削除対象と影響を確認したうえで続行する。
+      </p>
+      <pre><code>Router#factory reset all secure</code></pre>
 
       <p>確認プロンプトが複数回表示されるため、内容を確認して Enter を押す。</p>
       <pre><code>The factory reset operation is irreversible for all operations. Are you sure? [confirm]
@@ -520,42 +560,69 @@ The following will be deleted as a part of factory reset:
 The system will reload to perform factory reset.
 This operation can take anywhere between 30 minutes to 3 hours
 DO NOT UNPLUG THE POWER OR INTERRUPT THE OPERATION
-Are you sure you want to continue? [confirm]
-
-Factory reset will take a backup of the boot image if the system is currently booted from an image stored locally.
-If the current boot image is a remote image or stored on a usb/nim-ssd, please take a backup of the image before executing this command.
 Are you sure you want to continue? [confirm]</code></pre>
-
-      <h3>実行後ログ例</h3>
-      <pre><code>*May 20 03:15:59.159: SED security lock disabled
-*May 20 03:16:00.116: %SYS-5-RELOAD: Reload requested by Exec. Reload Reason: Factory Reset</code></pre>
 
       <div class="warning">
         <span class="label">禁止事項:</span>
-        Factory Reset 完了まで 30分から3時間程度かかる場合がある。処理中は電源を抜かず、
-        強制再起動や操作割り込みを行わないこと。Factory Reset 作業と再起動が確実に完了するまでは、
-        コンソール入力も行わないこと。
+        Factory Reset 中は電源断、USB 抜去、強制再起動、コンソール入力による割り込みを行わないこと。
+        完了まで 30分から3時間程度かかる場合がある。
       </div>
-
-      <h3>オプション: ROMMON モードで起動した場合</h3>
-      <div class="note">
-        <span class="label">補足:</span>
-        Factory Reset 後に ROMMON モードで立ち上がってきた場合は、以下のコマンドで
-        ルーターを起動し直す。オプション作業の要否は筐体型番に応じて判断する。
-      </div>
-      <pre><code>rommon &gt; confreg 0x2102
-rommon &gt; boot</code></pre>
 
       <div class="note">
         <span class="label">ISR1100-4G / 6G の注意:</span>
-        ISR1100-4G / 6G では、ROMMON 操作時に ROMMON プロンプトを利用できるようにするため、
-        コンソールのボーレートを一時的に <code>115200</code> へ変更する必要がある場合がある。
-        ルーター起動後は、コンソールのボーレートを元の値へ戻すこと。
+        <code>factory reset all secure</code>（3-pass / 7-pass）では bootflash がファイルシステムごと消去され参照できない状態になるため、
+        TFTP または USB からの起動が必須となる（ラボでは TFTP で検証）。ROMMON 時にコンソールのボーレートを一時的に
+        <code>115200</code> へ変更する必要がある場合がある。設定方法はその他は同じである。
+      </div>
+    </section>
+
+    <section>
+      <h2>8. USB/TFTP から起動して OS イメージを復旧</h2>
+      <p>
+        セキュアリセット後は bootflash に起動可能な OS イメージが存在しないため、ルータは ROMMON で起動する。
+        USB（または TFTP）上の OS イメージから一時的に起動し、初期プロンプト対応（手順 9 参照）で IOS コマンドプロンプトへ進んだうえで、
+        OS イメージを bootflash へコピーし直し、BOOT 変数を設定する。
+      </p>
+
+      <pre><code>rommon &gt; dir usbflash0:
+rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+      <div class="note">
+        <span class="label">ISR1100-4G / 6G の注意:</span>
+        ISR1100-4G / 6G では、ROMMON プロンプトを利用できるようにするため、コンソールのボーレートを一時的に <code>115200</code> へ変更する必要がある場合がある。
+        起動後は元のボーレートへ戻すこと。USB のデバイス名が異なる場合は <code>dir usbflash1:</code> などで確認する。
+        USB の代わりに TFTP 起動（例: <code>boot tftp://&lt;TFTP_SERVER&gt;/&lt;IOSXE_IMAGE.bin&gt;</code>）も使用できる。
+      </div>
+
+      <h3>OS イメージを bootflash へコピー</h3>
+      <pre><code>Router#dir usbflash0:
+Router#dir bootflash:
+Router#copy usbflash0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
+Router#verify /sha512 bootflash:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+
+      <h3>BOOT 変数の設定と確認</h3>
+      <pre><code>Router#configure terminal
+Router(config)#no boot system
+Router(config)#boot system bootflash:&lt;IOSXE_IMAGE.bin&gt;
+Router(config)#config-register 0x2102
+Router(config)#end
+Router#write memory
+Router#show boot</code></pre>
+
+      <ul>
+        <li><code>show version</code> の System image が <code>bootflash:&lt;IOSXE_IMAGE.bin&gt;</code> を指していること。</li>
+        <li><code>show boot</code> で BOOT 変数が bootflash 上の OS イメージを指していること。</li>
+        <li>USB を抜いた状態でも正常に起動できること。</li>
+      </ul>
+
+      <div class="note">
+        <span class="label">補足:</span>
+        この段階では SD-WAN 設定を NVRAM へ保存しない。続く手順で Bootstrap ファイルの再作成と Controller Mode の有効化を行う。
       </div>
     </section>
 
     <section id="basic-after-reset">
-      <h2>7. Factory Reset 後の初期プロンプト対応</h2>
+      <h2>9. Factory Reset 後の初期プロンプト対応</h2>
       <p>
         Factory Reset 実行後、完了まで数時間待機する。以下の
         <code>System Configuration Dialog</code> が表示されたら、初期設定ダイアログには入らず
@@ -603,7 +670,7 @@ Enter your selection [2]: 0</code></pre>
     </section>
 
     <section>
-      <h2>8. Bootstrap ファイルの再作成</h2>
+      <h2>10. Bootstrap ファイルの再作成</h2>
       <p>
         IOS コマンドプロンプトへ移行したら、<code>tclsh</code> を起動し、
         事前に準備した Bootstrap 内容を <code>bootflash:ciscosdwan.cfg</code> として再作成する。
@@ -697,7 +764,7 @@ system
     </section>
 
     <section>
-      <h2>9. Controller Mode の有効化</h2>
+      <h2>11. Controller Mode の有効化</h2>
       <p>
         Bootstrap ファイルを再作成し、内容確認が完了したら、
         以下のコマンドで Controller Mode を有効化する。
@@ -735,7 +802,7 @@ Do you wish to proceed with reload anyway[confirm]</code></pre>
     </section>
 
     <section>
-      <h2>10. 再起動後の SD-WAN 正常性確認</h2>
+      <h2>12. 再起動後の SD-WAN 正常性確認</h2>
       <p>
         Controller Mode 有効化後の再起動が完了したら、Bootstrap から SD-WAN Config が正常に読み込まれ、
         SD-WAN コントローラと接続できていることを確認する。
@@ -789,11 +856,11 @@ Do you wish to proceed with reload anyway[confirm]</code></pre>
         <div class="warning">
           <span class="label">このページの位置づけ:</span>
           <strong>Firewall 機能</strong>や <strong>Cisco ThousandEyes</strong> などの高度な機能を使用している場合、
-          基本手順の Bootstrap ファイル（<code>bootflash:ciscosdwan.cfg</code>）による起動では設定が正しく読み込まれないことが確認されている。
+          メイン手順の Bootstrap ファイル（<code>bootflash:ciscosdwan.cfg</code>）による起動では設定が正しく読み込まれないことが確認されている。
           そのため、こうした構成では本ページの回避手順を使用する。
         </div>
 
-        <h3>基本手順との違い</h3>
+        <h3>メイン手順との違い</h3>
         <p>
           本手順では、Bootstrap ファイル（<code>bootflash:ciscosdwan.cfg</code>）からの設定読み込みに頼らず、
           Controller Mode 上で CLI による設定操作を行い、
@@ -810,7 +877,7 @@ Do you wish to proceed with reload anyway[confirm]</code></pre>
           <span class="label">本手順の開始地点:</span>
           本手順は、<strong>すでに Controller Mode の有効化（<code>controller-mode enable</code>）が完了し、
           Bootstrap が正しく読み込まれないまま Controller Mode で立ち上がってきた状態</strong>からスタートする。
-          Factory Reset の実行、初期プロンプト対応、Controller Mode の有効化までは基本手順のとおり実施済みであることを前提とする。
+          Factory Reset の実行、初期プロンプト対応、Controller Mode の有効化まではメイン手順のとおり実施済みであることを前提とする。
         </div>
 
         <div class="note">
@@ -968,178 +1035,96 @@ show ip route vrf <span class="placeholder">&lt;XX&gt;</span></code></pre>
       </section>
     </div>
 
-    <div id="page-os-restore" class="page">
+    <div id="page-basic-optional" class="page">
       <section>
-        <h2>OS イメージ削除を伴う Secure Reset 手順</h2>
-        <p class="meta">対象: <code>factory reset all secure</code> を使用し、OS イメージを USB から戻す必要があるケース</p>
+        <h2>オプション: 基本リセット（factory reset all）</h2>
+        <p class="meta">対象: 完全消去が不要で、OS イメージを残せる場合に使用する。</p>
+
+        <div class="note">
+          <span class="label">このオプションを使う場面:</span>
+          メイン手順では <code>factory reset all secure</code> を使用し、bootflash のファイルシステム（OS イメージを含む）ごと消去する。
+          完全消去が不要な場合（例: 機器の再利用や移設）は、代わりに <code>factory reset all</code> を使用できる。
+          この場合 <code>packages.conf</code> や OS イメージは残るため、USB/TFTP による OS イメージ復旧手順は不要である。
+        </div>
 
         <div class="warning">
-          <span class="label">このページの位置づけ:</span>
-          本手順では Factory Reset 実行コマンドとして <code>factory reset all secure</code> を使用する。
-          このコマンドを実行すると、設定やユーザデータだけでなく、bootflash 上の OS イメージファイルも削除される場合がある。
-          そのため、作業前に Cisco 公式ダウンロードページから取得した OS イメージを USB へ配置し、
-          Factory Reset 後に USB から OS イメージをコピーし直す。
-        </div>
-
-        <div class="note">
-          <span class="label">作業の全体像:</span>
-          <ol>
-            <li>現在の OS バージョンと、復旧に使用する公式 OS イメージファイル名を確認する。</li>
-            <li>Cisco 公式ダウンロードページから OS イメージを取得し、USB 上に配置する。</li>
-            <li><code>factory reset all secure</code> を実行する。</li>
-            <li>USB 上の OS イメージで起動し、bootflash へ OS イメージをコピーし直す。</li>
-            <li>BOOT 変数を設定し、再起動後に bootflash 上の OS イメージから起動することを確認する。</li>
-          </ol>
+          <span class="label">重要:</span>
+          <code>factory reset all</code> でも、設定・ユーザデータ・ライセンス・OBFLログ・ROMMON変数・起動設定の消去は不可逆である。
+          実行前に Bootstrap 内容と必要な設定情報を退避すること。
         </div>
       </section>
 
       <section>
-        <h2>B-1. 作業前確認と USB の準備</h2>
+        <h2>メイン手順との違い</h2>
         <p>
-          Factory Reset 実行前に、現在起動している OS バージョンと、復旧に使用する OS イメージファイル名を確認する。
-          bootflash 上に残っている OS イメージはコピー元として使用しない。
-          USB は機器で認識できる形式で用意し、容量に余裕があることを確認する。
-          USB のデバイス名は機種や挿入スロットにより <code>usbflash0:</code> または <code>usbflash1:</code> など異なる場合がある。
+          事前準備（Bootstrap の作成・TCLSH 準備）と、リセット後の手順（初期プロンプト対応、Bootstrap 再作成、Controller Mode 有効化、SD-WAN 正常性確認）は、
+          メイン手順とまったく同じである。異なるのはリセットコマンドと OS イメージの扱いのみである。
         </p>
-
-        <pre><code>Router#show version | include System image
-Router#show boot
-Router#dir bootflash:
-Router#dir usbflash0:</code></pre>
-
-        <div class="note">
-          <span class="label">置き換え:</span>
-          以降の例では、OS イメージファイル名を <code>&lt;IOSXE_IMAGE.bin&gt;</code>、
-          USB のデバイス名を <code>usbflash0:</code> として記載する。
-          実機の出力に合わせて読み替えること。
-        </div>
-      </section>
-
-      <section>
-        <h2>B-2. OS イメージを Cisco 公式ページから取得して USB へ配置</h2>
-        <p>
-          ルータ本体の bootflash に残っている OS イメージは、Factory Reset 前の状態やファイル破損の影響を受けている可能性があるため、
-          本手順では使用しない。対象機種と導入予定バージョンに対応する OS イメージを
-          Cisco 公式ダウンロードページから作業端末へダウンロードし、USB へ配置する。
-        </p>
-
-        <ol>
-          <li>Cisco 公式ダウンロードページへアクセスし、対象機種に対応した IOS XE / SD-WAN イメージをダウンロードする。</li>
-          <li>ダウンロードページに掲載されているチェックサム値を控える。</li>
-          <li>作業端末上でダウンロードしたファイルのチェックサムを確認し、Cisco 掲載値と一致することを確認する。</li>
-          <li>確認済みの OS イメージファイルを USB のルートディレクトリへコピーする。</li>
-          <li>USB をルータへ挿入し、ルータからファイルが認識できることを確認する。</li>
-        </ol>
-
-        <pre><code>Router#dir usbflash0:
-Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
-
-        <div class="warning">
-          <span class="label">必須:</span>
-          <code>factory reset all secure</code> 実行後は bootflash 上の OS イメージが失われる前提で作業する。
-          Cisco 公式ページから取得した OS イメージのチェックサム確認、USB への配置、
-          ルータから USB 上のファイルを読み出せることの確認が完了するまで Factory Reset を開始しないこと。
-        </div>
-      </section>
-
-      <section>
-        <h2>B-3. Factory Reset の実行</h2>
-        <p>
-          Cisco 公式ページから取得した OS イメージの USB 配置と読み出し確認後、以下のコマンドで Factory Reset を実行する。
-          確認プロンプトが表示された場合は、削除対象と影響を確認したうえで続行する。
-        </p>
-
-        <pre><code>Router#factory reset all secure</code></pre>
-
-        <div class="warning">
-          <span class="label">禁止事項:</span>
-          Factory Reset 中は電源断、USB 抜去、強制再起動、コンソール入力による割り込みを行わないこと。
-          完了まで 30分から3時間程度かかる場合がある。
-        </div>
-
-        <div class="note">
-          <span class="label">ISR1100-4G / 6G の注意:</span>
-          <code>factory reset all secure</code>（3-pass / 7-pass）では bootflash がファイルシステムごと消去され参照できない状態になるため、
-          TFTP または USB からの起動が必須となる（ラボでは TFTP で検証）。
-          基本手順と同様に、ROMMON 時にコンソールのボーレートを一時的に <code>115200</code> へ変更する必要がある場合がある。
-          設定方法はその他は同じである。
-        </div>
-      </section>
-
-      <section>
-        <h2>B-4. USB 上の OS イメージから起動</h2>
-        <p>
-          Factory Reset 後、bootflash 上に起動可能な OS イメージがない場合は ROMMON で起動する。
-          USB が認識されていることを確認し、USB 上の OS イメージから一時的に起動する。
-        </p>
-
-        <pre><code>rommon &gt; dir usbflash0:
-rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
-
-        <div class="note">
-          <span class="label">補足:</span>
-          USB のデバイス名が異なる場合は <code>dir usbflash1:</code> などで認識状態を確認する。
-          USB から起動できない場合は、USB のフォーマット、挿入スロット、イメージファイル名、対象機種に対応した OS イメージであることを確認する。
-        </div>
-      </section>
-
-      <section>
-        <h2>B-5. OS イメージを bootflash へコピー</h2>
-        <p>
-          USB 上の OS イメージで起動できたら、初期プロンプトに対応して IOS コマンドプロンプトへ進む。
-          その後、USB から bootflash へ OS イメージファイルをコピーし直す。
-        </p>
-
-        <pre><code>Router#dir usbflash0:
-Router#dir bootflash:
-Router#copy usbflash0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
-Router#dir bootflash:
-Router#verify /sha512 bootflash:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
-
-        <div class="note">
-          <span class="label">容量確認:</span>
-          コピー前に <code>dir bootflash:</code> で空き容量を確認する。
-          容量が不足している場合は、不要ファイルがないかを確認し、必要に応じて保守手順に従って領域を確保する。
-        </div>
-      </section>
-
-      <section>
-        <h2>B-6. BOOT 変数の設定と起動確認</h2>
-        <p>
-          bootflash へ OS イメージを戻したら、次回以降 bootflash 上の OS イメージから起動するよう BOOT 変数を設定する。
-          設定保存後に再起動し、USB を使用せずに起動できることを確認する。
-        </p>
-
-        <pre><code>Router#configure terminal
-Router(config)#no boot system
-Router(config)#boot system bootflash:&lt;IOSXE_IMAGE.bin&gt;
-Router(config)#config-register 0x2102
-Router(config)#end
-Router#write memory
-Router#show boot
-Router#reload</code></pre>
-
-        <h3>再起動後の確認</h3>
-        <pre><code>Router#show version | include System image
-Router#show boot
-Router#dir bootflash:</code></pre>
-
         <ul>
-          <li><code>show version</code> の System image が <code>bootflash:&lt;IOSXE_IMAGE.bin&gt;</code> を指していること。</li>
-          <li><code>show boot</code> で BOOT 変数が bootflash 上の OS イメージを指していること。</li>
-          <li>USB を抜いた状態でも再起動後に正常起動できること。</li>
+          <li>リセットコマンド: <code>factory reset all</code>（<code>factory reset all secure</code> の代わり）。</li>
+          <li>OS イメージ: bootflash 上に残るため、USB/TFTP による OS 復旧は不要。</li>
+          <li>リセット後の起動: config-register 値に従って起動する（常に ROMMON へフォールバックするわけではない）。</li>
         </ul>
       </section>
 
       <section>
-        <h2>B-7. 以降の復旧手順</h2>
+        <h2>factory reset all の実行</h2>
         <p>
-          OS イメージの復旧と bootflash からの正常起動を確認した後は、基本手順の
-          <strong>Factory Reset 後の初期プロンプト対応</strong>以降に戻り、
-          Bootstrap ファイルの再作成、Controller Mode の有効化、SD-WAN 正常性確認を実施する。
+          SD-WAN の Controller Mode で動作している状態から、以下のコマンドで Factory Reset を直接実行する。
         </p>
+        <pre><code>factory reset all</code></pre>
 
-        <button type="button" class="jump-btn" data-target="page-basic" data-scroll-target="basic-after-reset">基本手順7へ戻る</button>
+        <p>確認プロンプトが複数回表示されるため、内容を確認して Enter を押す。</p>
+        <pre><code>The factory reset operation is irreversible for all operations. Are you sure? [confirm]
+
+The following will be deleted as a part of factory reset:
+ 1: All writable file systems and personal data
+ 2: OBFL logs
+ 3: Licenses
+ 4: Userdata and Startup config
+ 5: Rommon variables
+ 6: User Credentials
+
+The system will reload to perform factory reset.
+This operation can take anywhere between 30 minutes to 3 hours
+DO NOT UNPLUG THE POWER OR INTERRUPT THE OPERATION
+Are you sure you want to continue? [confirm]
+
+Factory reset will take a backup of the boot image if the system is currently booted from an image stored locally.
+If the current boot image is a remote image or stored on a usb/nim-ssd, please take a backup of the image before executing this command.
+Are you sure you want to continue? [confirm]</code></pre>
+
+        <div class="warning">
+          <span class="label">禁止事項:</span>
+          Factory Reset 完了まで 30分から3時間程度かかる場合がある。Factory Reset 作業と再起動が確実に完了するまでは、
+          電源を抜かず、強制再起動や操作割り込みを行わないこと。
+        </div>
+
+        <h3>オプション: ROMMON モードで起動した場合</h3>
+        <div class="note">
+          <span class="label">補足:</span>
+          Factory Reset 後に ROMMON モードで立ち上がってきた場合は、以下のコマンドでルーターを起動し直す。
+          要否は筐体型番に応じて判断する。
+        </div>
+        <pre><code>rommon &gt; confreg 0x2102
+rommon &gt; boot</code></pre>
+
+        <div class="note">
+          <span class="label">ISR1100-4G / 6G の注意:</span>
+          ISR1100-4G / 6G では、ROMMON 操作時にコンソールのボーレートを一時的に <code>115200</code> へ変更する必要がある場合がある。
+          起動後は元のボーレートへ戻すこと。
+        </div>
+      </section>
+
+      <section>
+        <h2>メイン手順へ続く</h2>
+        <p>
+          リセット完了後の手順は、メイン手順と同じである。
+          初期プロンプト対応、Bootstrap ファイルの再作成、Controller Mode の有効化、SD-WAN 正常性確認を実施する。
+        </p>
+        <button type="button" class="jump-btn" data-target="page-secure" data-scroll-target="basic-after-reset">
+          メイン手順（初期プロンプト対応以降）へ進む
+        </button>
       </section>
     </div>
 
@@ -1156,8 +1141,8 @@ Router#dir bootflash:</code></pre>
 
         <div class="warning">
           <span class="label">位置づけ:</span>
-          本手順書では <code>factory reset all</code> を基本手順、
-          <code>factory reset all secure</code> を OS イメージ復旧を伴う手順として扱う。
+          本手順書では <code>factory reset all secure</code> をメイン手順、
+          <code>factory reset all</code> を OS イメージを残すオプション手順として扱う。
           下表は、関連する <code>factory reset</code> コマンドの削除範囲を比較するための参考情報とする。
         </div>
       </section>
