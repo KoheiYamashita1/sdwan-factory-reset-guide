@@ -513,7 +513,7 @@ username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_
       <pre><code>Router#show version | include System image
 Router#show boot
 Router#dir bootflash:
-Router#dir usbflash0:</code></pre>
+Router#dir usb0:</code></pre>
 
       <ol>
         <li>現在の OS バージョンと、復旧に使用する公式 OS イメージファイル名を確認する。</li>
@@ -523,12 +523,12 @@ Router#dir usbflash0:</code></pre>
         <li>機器から USB 上のイメージが読み出せることを確認する。</li>
       </ol>
 
-      <pre><code>Router#dir usbflash0:
-Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+      <pre><code>Router#dir usb0:
+Router#verify /sha512 usb0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
       <div class="note">
         <span class="label">置き換え:</span>
-        例では OS イメージファイル名を <code>&lt;IOSXE_IMAGE.bin&gt;</code>、USB のデバイス名を <code>usbflash0:</code> として記載する。
+        例では OS イメージファイル名を <code>&lt;IOSXE_IMAGE.bin&gt;</code>、USB のデバイス名を <code>usb0:</code> として記載する。
         USB のデバイス名は機種や挿入スロットにより <code>usbflash1:</code> などになる場合がある。実機に合わせて読み替えること。
       </div>
 
@@ -584,8 +584,8 @@ Are you sure you want to continue? [confirm]</code></pre>
         OS イメージを bootflash へコピーし直し、BOOT 変数を設定する。
       </p>
 
-      <pre><code>rommon &gt; dir usbflash0:
-rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+      <pre><code>rommon &gt; dir usb0:
+rommon &gt; boot usb0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
       <div class="note">
         <span class="label">ISR1100-4G / 6G の注意:</span>
@@ -595,9 +595,9 @@ rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
       </div>
 
       <h3>OS イメージを bootflash へコピー</h3>
-      <pre><code>Router#dir usbflash0:
+      <pre><code>Router#dir usb0:
 Router#dir bootflash:
-Router#copy usbflash0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
+Router#copy usb0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
 Router#verify /sha512 bootflash:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
       <h3>BOOT 変数の設定と確認</h3>
@@ -1300,7 +1300,7 @@ rommon &gt; boot</code></pre>
         <pre><code>Router#show version | include System image
 Router#show boot
 Router#dir bootflash:
-Router#dir usbflash0:</code></pre>
+Router#dir usb0:</code></pre>
       </section>
     </div>
   </main>

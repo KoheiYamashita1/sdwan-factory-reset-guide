@@ -513,7 +513,7 @@ username admin privilege 15 secret 9 <span class="placeholder">&lt;ADMIN_SECRET_
       <pre><code>Router#show version | include System image
 Router#show boot
 Router#dir bootflash:
-Router#dir usbflash0:</code></pre>
+Router#dir usb0:</code></pre>
 
       <ol>
         <li>Confirm the current OS version and the official OS image filename to use for recovery.</li>
@@ -523,12 +523,12 @@ Router#dir usbflash0:</code></pre>
         <li>Confirm that the device can read the image from USB.</li>
       </ol>
 
-      <pre><code>Router#dir usbflash0:
-Router#verify /sha512 usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+      <pre><code>Router#dir usb0:
+Router#verify /sha512 usb0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
       <div class="note">
         <span class="label">Replace as needed:</span>
-        The examples use <code>&lt;IOSXE_IMAGE.bin&gt;</code> as the OS image filename and <code>usbflash0:</code> as the USB device name.
+        The examples use <code>&lt;IOSXE_IMAGE.bin&gt;</code> as the OS image filename and <code>usb0:</code> as the USB device name.
         The USB device name may be <code>usbflash1:</code> or another name depending on the model and slot. Adjust to match the actual device.
       </div>
 
@@ -584,8 +584,8 @@ Are you sure you want to continue? [confirm]</code></pre>
         then copy the image back to bootflash and set the BOOT variable.
       </p>
 
-      <pre><code>rommon &gt; dir usbflash0:
-rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
+      <pre><code>rommon &gt; dir usb0:
+rommon &gt; boot usb0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
       <div class="note">
         <span class="label">ISR1100-4G / 6G note:</span>
@@ -595,9 +595,9 @@ rommon &gt; boot usbflash0:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
       </div>
 
       <h3>Copy the OS Image to bootflash</h3>
-      <pre><code>Router#dir usbflash0:
+      <pre><code>Router#dir usb0:
 Router#dir bootflash:
-Router#copy usbflash0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
+Router#copy usb0:&lt;IOSXE_IMAGE.bin&gt; bootflash:&lt;IOSXE_IMAGE.bin&gt;
 Router#verify /sha512 bootflash:&lt;IOSXE_IMAGE.bin&gt;</code></pre>
 
       <h3>Set the BOOT Variable and Verify</h3>
@@ -1296,7 +1296,7 @@ rommon &gt; boot</code></pre>
         <pre><code>Router#show version | include System image
 Router#show boot
 Router#dir bootflash:
-Router#dir usbflash0:</code></pre>
+Router#dir usb0:</code></pre>
       </section>
     </div>
   </main>
